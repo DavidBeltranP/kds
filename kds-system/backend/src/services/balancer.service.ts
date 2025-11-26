@@ -54,6 +54,23 @@ export class BalancerService {
 
     // Distribuir según estrategia
     if (queue.distribution === 'DISTRIBUTED') {
+      // Si solo hay 1 pantalla activa, no tiene sentido balancear
+      // Todas las órdenes van a esa única pantalla
+      if (activeScreenIds.length === 1) {
+        balancerLogger.info(
+          `Queue ${queue.name}: Solo 1 pantalla activa, balanceo desactivado temporalmente`
+        );
+        return [
+          {
+            screenId: activeScreenIds[0],
+            orders: filteredOrders,
+          },
+        ];
+      }
+      // Con 2+ pantallas activas, balancear con Round-Robin
+      balancerLogger.info(
+        `Queue ${queue.name}: ${activeScreenIds.length} pantallas activas, balanceo activado`
+      );
       return this.distributeRoundRobin(filteredOrders, activeScreenIds, queueId);
     } else {
       // SINGLE: todas las órdenes a la primera pantalla activa
@@ -207,21 +224,74 @@ export class BalancerService {
 
   /**
    * Maneja cuando una pantalla entra en standby
+   * Redistribuye las órdenes pendientes a pantallas activas
    */
-  async handleScreenStandby(screenId: string): Promise<void> {
+  async handleScreenStandby(screenId: string): Promise<string[]> {
     const screen = await prisma.screen.findUnique({
       where: { id: screenId },
       select: { queueId: true, name: true },
     });
 
-    if (!screen) return;
+    if (!screen) return [];
 
     balancerLogger.info(
-      `Screen ${screen.name} entered standby - removed from balancing`
+      `Screen ${screen.name} entered standby - redistributing orders`
     );
 
-    // Las órdenes asignadas permanecen pero no se asignan nuevas
-    // Cuando salga de standby, volverá a recibir nuevas órdenes
+    // Obtener pantallas activas de la misma cola (excluyendo la que se apaga)
+    const activeScreenIds = await screenService.getActiveScreensForQueue(screen.queueId);
+    const remainingScreens = activeScreenIds.filter(id => id !== screenId);
+
+    if (remainingScreens.length === 0) {
+      balancerLogger.warn(
+        `No active screens to redistribute orders from ${screen.name}`
+      );
+      return [];
+    }
+
+    // Obtener órdenes pendientes de la pantalla que se apaga
+    const pendingOrders = await prisma.order.findMany({
+      where: {
+        screenId,
+        status: { in: ['PENDING', 'IN_PROGRESS'] },
+      },
+      select: { id: true },
+    });
+
+    if (pendingOrders.length === 0) {
+      balancerLogger.info(`No pending orders to redistribute from ${screen.name}`);
+      return [];
+    }
+
+    balancerLogger.info(
+      `Redistributing ${pendingOrders.length} orders from ${screen.name} to ${remainingScreens.length} active screens`
+    );
+
+    // Redistribuir órdenes usando round-robin entre pantallas activas
+    const affectedScreenIds: Set<string> = new Set();
+    let index = 0;
+
+    for (const order of pendingOrders) {
+      const targetScreenId = remainingScreens[index % remainingScreens.length];
+
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { screenId: targetScreenId },
+      });
+
+      // Actualizar Redis
+      await redis.srem(REDIS_KEYS.screenOrders(screenId), order.id);
+      await redis.sadd(REDIS_KEYS.screenOrders(targetScreenId), order.id);
+
+      affectedScreenIds.add(targetScreenId);
+      index++;
+    }
+
+    balancerLogger.info(
+      `Redistributed ${pendingOrders.length} orders to screens: ${Array.from(affectedScreenIds).map(id => id.slice(-4)).join(', ')}`
+    );
+
+    return Array.from(affectedScreenIds);
   }
 
   /**

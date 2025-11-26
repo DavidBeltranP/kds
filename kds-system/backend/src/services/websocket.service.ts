@@ -182,7 +182,15 @@ export class WebSocketService {
       await screenService.updateScreenStatus(data.screenId, data.status);
 
       if (data.status === 'STANDBY') {
-        await balancerService.handleScreenStandby(data.screenId);
+        // Redistribuir órdenes a pantallas activas
+        const affectedScreenIds = await balancerService.handleScreenStandby(data.screenId);
+
+        // Notificar a las pantallas que recibieron órdenes redistribuidas
+        for (const screenId of affectedScreenIds) {
+          await this.broadcastOrdersUpdate(screenId);
+        }
+
+        wsLogger.info(`Orders redistributed to ${affectedScreenIds.length} screens after ${data.screenId} went to standby`);
       } else if (data.status === 'ONLINE') {
         await balancerService.handleScreenReactivation(data.screenId);
       }
@@ -258,12 +266,31 @@ export class WebSocketService {
   /**
    * Maneja desconexión
    */
-  private handleDisconnect(socket: Socket): void {
+  private async handleDisconnect(socket: Socket): Promise<void> {
     // Encontrar y limpiar screenId asociado
     for (const [screenId, socketId] of this.screenSockets.entries()) {
       if (socketId === socket.id) {
         this.screenSockets.delete(screenId);
         wsLogger.info(`Screen disconnected: ${screenId}`);
+
+        // Esperar un poco para ver si es reconexión rápida
+        setTimeout(async () => {
+          // Verificar si la pantalla sigue desconectada
+          const isAlive = await screenService.getScreenStatus(screenId);
+
+          if (isAlive === 'OFFLINE') {
+            wsLogger.info(`Screen ${screenId} confirmed offline, redistributing orders...`);
+
+            // Redistribuir órdenes
+            const affectedScreenIds = await balancerService.handleScreenStandby(screenId);
+
+            // Notificar a las pantallas que recibieron órdenes redistribuidas
+            for (const affectedScreenId of affectedScreenIds) {
+              await this.broadcastOrdersUpdate(affectedScreenId);
+            }
+          }
+        }, 5000); // Esperar 5 segundos antes de redistribuir
+
         break;
       }
     }

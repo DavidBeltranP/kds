@@ -225,6 +225,7 @@ export function Queues() {
       title: 'Nombre',
       dataIndex: 'name',
       key: 'name',
+      width: 200,
       render: (name: string, record: Queue) => (
         <Space direction="vertical" size={0}>
           <span style={{ fontWeight: 500 }}>{name}</span>
@@ -235,52 +236,70 @@ export function Queues() {
       ),
     },
     {
-      title: 'Modo Balance',
+      title: 'Balance',
       dataIndex: 'balanceMode',
       key: 'balanceMode',
+      width: 120,
       render: (mode: string) => {
         const colors: Record<string, string> = {
           ROUND_ROBIN: 'blue',
           LEAST_LOADED: 'green',
           MANUAL: 'orange',
         };
-        return <Tag color={colors[mode]}>{mode}</Tag>;
+        const labels: Record<string, string> = {
+          ROUND_ROBIN: 'Round Robin',
+          LEAST_LOADED: 'Menos Cargada',
+          MANUAL: 'Manual',
+        };
+        return <Tag color={colors[mode]}>{labels[mode] || mode}</Tag>;
       },
-    },
-    {
-      title: 'Prioridad',
-      dataIndex: 'priority',
-      key: 'priority',
     },
     {
       title: 'Pantallas',
       dataIndex: 'screensCount',
       key: 'screensCount',
-      render: (count: number) => <Tag>{count} pantallas</Tag>,
+      width: 90,
+      align: 'center' as const,
+      render: (count: number) => <Tag>{count}</Tag>,
     },
     {
       title: 'Canales',
       key: 'channels',
+      width: 100,
       render: (_: any, record: Queue) => (
-        <Space>
-          {record.channels.map((ch) => (
-            <Tag key={ch.id} color={ch.enabled ? 'green' : 'default'}>
-              {ch.type}
-            </Tag>
-          ))}
-          {record.channels.length === 0 && <Tag>Sin canales</Tag>}
+        <Space size={2} wrap>
+          {record.channels.length > 0 ? (
+            record.channels.map((ch) => (
+              <Tag key={ch.id} color={ch.enabled ? 'green' : 'default'} style={{ margin: 0 }}>
+                {ch.type}
+              </Tag>
+            ))
+          ) : (
+            <Tag>-</Tag>
+          )}
         </Space>
       ),
     },
     {
-      title: 'Stats',
-      key: 'stats',
+      title: 'Pendientes',
+      key: 'pending',
+      width: 90,
+      align: 'center' as const,
       render: (_: any, record: Queue) =>
         record.stats ? (
-          <Space>
-            <Tag color="gold">{record.stats.pending} pendientes</Tag>
-            <Tag color="green">{record.stats.completed} completadas</Tag>
-          </Space>
+          <Tag color="gold">{record.stats.pending}</Tag>
+        ) : (
+          '-'
+        ),
+    },
+    {
+      title: 'Completadas',
+      key: 'completed',
+      width: 100,
+      align: 'center' as const,
+      render: (_: any, record: Queue) =>
+        record.stats ? (
+          <Tag color="green">{record.stats.completed}</Tag>
         ) : (
           '-'
         ),
@@ -288,8 +307,9 @@ export function Queues() {
     {
       title: 'Acciones',
       key: 'actions',
+      width: 120,
       render: (_: any, record: Queue) => (
-        <Space>
+        <Space size={4}>
           <Button icon={<EditOutlined />} size="small" onClick={() => handleEdit(record)} />
           <Button
             icon={<SyncOutlined />}
@@ -451,6 +471,7 @@ export function Queues() {
           loading={loading}
           expandable={{ expandedRowRender }}
           pagination={false}
+          size="middle"
         />
       </Card>
 
