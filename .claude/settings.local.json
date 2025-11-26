@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(tree:*)",
+      "Bash(cat:*)",
+      "Bash(make:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker network prune:*)",
+      "Bash(docker network:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma migrate:*)",
+      "Bash(npx prisma db seed:*)",
+      "Bash(npm run dev:*)",
+      "Bash(docker exec:*)",
+      "Bash(curl:*)",
+      "Bash(npx tsx:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(gh:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: Orders page and add screen preview functionality\n\n- Fix Orders page data handling for backend response format\n- Add test order generation endpoint for development\n- Create ScreenPreview component for real-time appearance preview\n- Integrate preview into Appearance configuration page\n- Add generateTest API function in backoffice\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git commit:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npx tsc:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

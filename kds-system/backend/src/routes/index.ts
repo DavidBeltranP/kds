@@ -1,0 +1,251 @@
+import { Router } from 'express';
+import { authenticate, authorize } from '../middlewares/auth.middleware';
+
+// Controllers
+import * as authController from '../controllers/auth.controller';
+import * as screenController from '../controllers/screen.controller';
+import * as queueController from '../controllers/queue.controller';
+import * as orderController from '../controllers/order.controller';
+import * as configController from '../controllers/config.controller';
+
+const router = Router();
+
+// ============================================
+// AUTH ROUTES
+// ============================================
+router.post('/auth/login', authController.login);
+router.post('/auth/refresh', authController.refresh);
+router.get('/auth/me', authenticate, authController.me);
+router.post(
+  '/auth/change-password',
+  authenticate,
+  authController.changePassword
+);
+
+// ============================================
+// SCREEN ROUTES
+// ============================================
+router.get('/screens', authenticate, screenController.getAllScreens);
+router.get('/screens/:id', authenticate, screenController.getScreen);
+router.post(
+  '/screens',
+  authenticate,
+  authorize('ADMIN'),
+  screenController.createScreen
+);
+router.put(
+  '/screens/:id',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  screenController.updateScreen
+);
+router.delete(
+  '/screens/:id',
+  authenticate,
+  authorize('ADMIN'),
+  screenController.deleteScreen
+);
+
+// Screen configuration
+router.get('/screens/:id/config', screenController.getScreenConfig);
+router.put(
+  '/screens/:id/appearance',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  screenController.updateAppearance
+);
+router.put(
+  '/screens/:id/keyboard',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  screenController.updateKeyboard
+);
+
+// Screen status
+router.post(
+  '/screens/:id/standby',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  screenController.setStandby
+);
+router.post(
+  '/screens/:id/activate',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  screenController.activateScreen
+);
+router.post(
+  '/screens/:id/regenerate-key',
+  authenticate,
+  authorize('ADMIN'),
+  screenController.regenerateApiKey
+);
+
+// ============================================
+// QUEUE ROUTES
+// ============================================
+router.get('/queues', authenticate, queueController.getAllQueues);
+router.get('/queues/:id', authenticate, queueController.getQueue);
+router.post(
+  '/queues',
+  authenticate,
+  authorize('ADMIN'),
+  queueController.createQueue
+);
+router.put(
+  '/queues/:id',
+  authenticate,
+  authorize('ADMIN'),
+  queueController.updateQueue
+);
+router.delete(
+  '/queues/:id',
+  authenticate,
+  authorize('ADMIN'),
+  queueController.deleteQueue
+);
+
+// Queue channels
+router.post(
+  '/queues/:id/channels',
+  authenticate,
+  authorize('ADMIN'),
+  queueController.addChannel
+);
+router.put(
+  '/queues/:id/channels/:channelId',
+  authenticate,
+  authorize('ADMIN'),
+  queueController.updateChannel
+);
+router.delete(
+  '/queues/:id/channels/:channelId',
+  authenticate,
+  authorize('ADMIN'),
+  queueController.deleteChannel
+);
+
+// Queue filters
+router.post(
+  '/queues/:id/filters',
+  authenticate,
+  authorize('ADMIN'),
+  queueController.addFilter
+);
+router.delete(
+  '/queues/:id/filters/:filterId',
+  authenticate,
+  authorize('ADMIN'),
+  queueController.deleteFilter
+);
+
+// Queue stats
+router.get('/queues/:id/stats', authenticate, queueController.getQueueStats);
+router.post(
+  '/queues/:id/reset-balance',
+  authenticate,
+  authorize('ADMIN'),
+  queueController.resetBalance
+);
+
+// ============================================
+// ORDER ROUTES
+// ============================================
+router.get('/orders', authenticate, orderController.getAllOrders);
+router.get('/orders/stats', authenticate, orderController.getOrderStats);
+router.get('/orders/:id', authenticate, orderController.getOrder);
+router.get(
+  '/orders/screen/:screenId',
+  authenticate,
+  orderController.getOrdersByScreen
+);
+router.get(
+  '/orders/recently-finished/:screenId',
+  authenticate,
+  orderController.getRecentlyFinished
+);
+
+router.post(
+  '/orders/:id/finish',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  orderController.finishOrder
+);
+router.post(
+  '/orders/:id/undo',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  orderController.undoFinishOrder
+);
+router.post(
+  '/orders/:id/cancel',
+  authenticate,
+  authorize('ADMIN'),
+  orderController.cancelOrder
+);
+router.delete(
+  '/orders/cleanup',
+  authenticate,
+  authorize('ADMIN'),
+  orderController.cleanupOrders
+);
+router.post(
+  '/orders/generate-test',
+  authenticate,
+  authorize('ADMIN'),
+  orderController.generateTestOrders
+);
+router.delete(
+  '/orders/test-orders',
+  authenticate,
+  authorize('ADMIN'),
+  orderController.deleteTestOrders
+);
+
+// ============================================
+// CONFIG ROUTES
+// ============================================
+router.get('/config/health', configController.healthCheck);
+router.get('/config/stats', authenticate, configController.getSystemStats);
+router.get('/config/general', authenticate, configController.getGeneralConfig);
+router.put(
+  '/config/general',
+  authenticate,
+  authorize('ADMIN'),
+  configController.updateGeneralConfig
+);
+router.get(
+  '/config/mxp',
+  authenticate,
+  authorize('ADMIN'),
+  configController.getMxpConfig
+);
+router.put(
+  '/config/mxp',
+  authenticate,
+  authorize('ADMIN'),
+  configController.updateMxpConfig
+);
+
+// Polling control
+router.get('/config/polling', authenticate, configController.getPollingStatus);
+router.post(
+  '/config/polling/start',
+  authenticate,
+  authorize('ADMIN'),
+  configController.startPolling
+);
+router.post(
+  '/config/polling/stop',
+  authenticate,
+  authorize('ADMIN'),
+  configController.stopPolling
+);
+router.post(
+  '/config/polling/force',
+  authenticate,
+  authorize('ADMIN'),
+  configController.forcePoll
+);
+
+export default router;

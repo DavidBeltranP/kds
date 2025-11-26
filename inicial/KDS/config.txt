@@ -1,0 +1,648 @@
+﻿{
+	"Generales": {
+        "lecturaComandas":2,
+		"tiempoVida": 4,		
+		"diasRetencionLog": 5,
+		"comandaYcounters": true,
+		"cuentaProductos": false
+	},
+	"ConexionMXP": {
+		"ip": "10.101.27.20",
+		"usuario": "sa",
+		"clave": "jcjajplae*88",
+		"catalogo": "MAXPOINT_K027"
+	},
+	"ConexionKDS": {
+		"ip": "10.101.27.20",
+		"usuario": "sa",
+		"clave": "jcjajplae*88",
+		"catalogo": "KDS2"
+	},
+	"Comandas": {
+		"imprimirTCP": true,
+		"tiempoComandasVivas": 300,
+		"teclaBorradoComandas": "/",
+		"reintentosBase": 3,
+		"impresoraNombre": "PRN01C02",
+		"impresoraIP": "X.X.X.X",
+		"impresoraPuerto": 9100,
+		"imprimirSinPantallasActivas": false,
+		"columnasDetalles": 24,
+		"fuenteDetalles": "chico"
+	},
+	"Colas": [
+		{
+			"nombre": "LINEAS",
+			"distribucion": "D",
+			"canales": [		
+				"Kiosko-Efectivo",
+				"Kiosko-Tarjeta",
+				"Local",
+				"Pick-up-Tarjeta",
+				"AcumulaPTS",
+				"CanjePTS",
+				"ErrorAcumulaPTS",
+				"Llevar",
+				"Pickup-Efectivo",
+				"Ventas-por-Cupones",
+				"Ventas-Manuales",
+				"Eventos-Externos",
+				"Pick-up-Tarjeta-AcumulaPTS",
+				"Pick-up-Tarjeta-CanjePTS",
+				"Pick-up-Efectivo-AcumulaPTS",
+				"Pick-up-Efectivo-CanjePTS"
+					
+
+			],
+			"filtros": []
+		},
+{
+			"nombre": "SANDUCHE",
+			"distribucion": "D",
+			"canales": [
+				"Kiosko-Efectivo",
+				"Kiosko-Tarjeta",
+				"Local",
+				"Pick-up-Tarjeta",
+				"AcumulaPTS",
+				"CanjePTS",
+				"ErrorAcumulaPTS",
+				"Llevar",
+				"Pickup-Efectivo",
+				"Ventas-por-Cupones",
+				"Ventas-Manuales",
+				"Eventos-Externos",
+				"Pick-up-Tarjeta-AcumulaPTS",
+				"Pick-up-Tarjeta-CanjePTS",
+				"Pick-up-Efectivo-AcumulaPTS",
+				"Pick-up-Efectivo-CanjePTS"
+
+			],
+			"filtros": [
+				"sanduche",
+				"twister",
+				"ruster"
+			]
+		}
+	],
+	"Pantallas": [			{
+			"nombre": "Pantalla1",
+			"ip": "10.101.27.59",
+			"cola": "LINEAS",
+			"imprime": "SI",
+			"impresoraNombre": "lineadomi",
+ 			"impresoraIP": "10.101.27.66",
+			"impresoraPuerto": 9100,
+			"contar": [],
+			"filtros": [
+			],
+			"propiedades": "{
+							  'appearance': {
+								'cardColor': [
+								  {
+									'id': '1',
+									'color': '#98c530',
+									'minutes': '01:00',
+									'isFullBackground': false
+								  },
+								  {
+									'id': '2',
+									'color': '#fddf58',
+									'minutes': '02:00',
+									'isFullBackground': false
+								  },
+								  {
+									'id': '3',
+									'color': '#e75646',
+									'minutes': '03:00',
+									'isFullBackground': false
+								  },
+								  {
+									'id': '4',
+									'color': '#e75646',
+									'minutes': '04:00',
+									'isFullBackground': false
+								  }
+								],
+								'channelColor': [
+								  {
+									'id': '1h52sciu8031e34530ede71',
+									'color': '#bd10e0',
+									'channel': 'APP'
+								  },								  
+								  {
+									'id': '1h52sb3l10642cf80158dc4',
+									'color': '#4a90e2',
+									'channel': 'LOCAL'
+								  },
+								  {
+									'id': '1h52sb5er067b5616f29c7d',
+									'color': '#000000',
+									'channel': 'Llevar'
+								  },
+								  {
+									'id': '1h52sbd080bb9a563483e01',
+									'color': '#d0021b',
+									'channel': 'PedidosYa'
+								  },
+								  {
+									'id': '1h52sbdnh04b84106ce1de',
+									'color': '#d0021b',
+									'channel': 'RAPPI'
+								  },
+								  {
+									'id': '1h52sbdnh04b84106rt78z',
+									'color': '#ff8000',
+									'channel': 'RAPPI-TURBO'
+								  },
+								  {
+									'id': '1h69t3uge0af4333999ebc',
+									'color': '#7ed321',
+									'channel': 'Local'
+								  },
+								  {
+									'id': '1h69t3uge0af4333999epk',
+									'color': '#4a9882',
+									'channel': 'Pickup-Efectivo'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e2463fc7da',
+									'color': '#b8e986',
+									'channel': 'LUNCH'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e2463f41ty',
+									'color': '#ec728a',
+									'channel': 'CALLCENTER'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e2463fc7kk',
+									'color': '#008080',
+									'channel': 'KIOSCO'
+								  },
+								  {
+									'id': '1h52sbdnh04b84106ce1mp',
+									'color': '#0299d0',
+									'channel': 'SALON'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#0299d0',
+									'channel': 'Kiosko-Efectivo'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'Kiosko-Tarjeta'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'Pick-up-Tarjeta'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'App'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'Drive'
+								  }
+								],
+								'fontSize': '20px', 
+								'ordersDisplay': 'COLUMNS', 
+								'theme': 'DARK', 
+								'columnsPerScreen': 4, 
+								'columnSize': '260px',
+								'fontFamily': 'Arimo-Medium',
+								'screenName': '----',
+								'screenSplit': false,
+								'counters': false,
+								'footerHeight': '72px'
+							  },
+							  'preference': {
+								'finishOrder': {
+								  'active': false,
+								  'timePicker': '00:20'
+								},
+								'clientData': {
+								  'active': true
+								},
+								'sourceBox': {
+								  'active': true,
+								  'message': 'KDS'
+								},
+								'showName': {
+								  'active': true
+								},
+								'showIdentifier': {
+								  'active': true,
+								  'message': 'Orden'
+								},
+								'showNumerator': {
+								  'active': false
+								},
+								'showPagination': {
+								  'active': true
+								},
+								'keyboardShortcuts': {
+								  'confirmCloseOrderModal': '0',
+								  'cancelCloseOrderModal': 'v',
+								  'finishFirstOrder': 'h',
+								  'finishSecondOrder': '3',
+								  'finishThirdOrder': '1',
+								  'finishFourthOrder': 'f',
+								  'finishFifthOrder': 'j',
+								  'undo': 'c',
+								  'nextPage': 'i',
+								  'previousPage': 'g',
+								  'resetTime': 'r',
+								  'firstPage': 'q',
+								  'secondPage': 'w',
+								  'middlePage': 'e',
+								  'penultimatePage': 'x',
+								  'lastPage': 't',
+								  'power': 'a',
+								  'exit': 'm'
+								}
+							  }
+							}"
+			},
+			{
+			"nombre": "Pantalla2",
+			"ip": "10.101.27.58",
+			"cola": "LINEAS",
+			"imprime": "SI",
+			"impresoraNombre": "linea",
+ 			"impresoraIP": "10.101.27.67",
+			"impresoraPuerto": 9100,
+			"contar": [],
+			"filtros": [
+				
+			],
+			"propiedades": "{
+							  'appearance': {
+								'cardColor': [
+								  {
+									'id': '1',
+									'color': '#98c530',
+									'minutes': '01:00',
+									'isFullBackground': false
+								  },
+								  {
+									'id': '2',
+									'color': '#fddf58',
+									'minutes': '02:00',
+									'isFullBackground': false
+								  },
+								  {
+									'id': '3',
+									'color': '#e75646',
+									'minutes': '03:00',
+									'isFullBackground': false
+								  },
+								  {
+									'id': '4',
+									'color': '#e75646',
+									'minutes': '04:00',
+									'isFullBackground': false
+								  }
+								],
+								'channelColor': [
+								  {
+									'id': '1h52sciu8031e34530ede71',
+									'color': '#bd10e0',
+									'channel': 'APP'
+								  },								  
+								  {
+									'id': '1h52sb3l10642cf80158dc4',
+									'color': '#4a90e2',
+									'channel': 'LOCAL'
+								  },
+								  {
+									'id': '1h52sb5er067b5616f29c7d',
+									'color': '#000000',
+									'channel': 'Llevar'
+								  },
+								  {
+									'id': '1h52sbd080bb9a563483e01',
+									'color': '#d0021b',
+									'channel': 'PedidosYa'
+								  },
+								  {
+									'id': '1h52sbdnh04b84106ce1de',
+									'color': '#d0021b',
+									'channel': 'RAPPI'
+								  },
+								  {
+									'id': '1h52sbdnh04b84106rt78z',
+									'color': '#ff8000',
+									'channel': 'RAPPI-TURBO'
+								  },
+								  {
+									'id': '1h69t3uge0af4333999ebc',
+									'color': '#7ed321',
+									'channel': 'Local'
+								  },
+								  {
+									'id': '1h69t3uge0af4333999epk',
+									'color': '#4a9882',
+									'channel': 'Pickup-Efectivo'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e2463fc7da',
+									'color': '#b8e986',
+									'channel': 'LUNCH'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e2463f41ty',
+									'color': '#ec728a',
+									'channel': 'CALLCENTER'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e2463fc7kk',
+									'color': '#008080',
+									'channel': 'KIOSCO'
+								  },
+								  {
+									'id': '1h52sbdnh04b84106ce1mp',
+									'color': '#0299d0',
+									'channel': 'SALON'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#0299d0',
+									'channel': 'Kiosko-Efectivo'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'Kiosko-Tarjeta'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'Pick-up-Tarjeta'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'App'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'Drive'
+								  }
+
+								],
+								'fontSize': '20px', 
+								'ordersDisplay': 'COLUMNS', 
+								'theme': 'DARK', 
+								'columnsPerScreen': 4, 
+								'columnSize': '260px',
+								'fontFamily': 'Arimo-Medium',
+								'screenName': '----',
+								'screenSplit': false,
+								'counters': false,
+								'footerHeight': '72px'
+							  },
+							  'preference': {
+								'finishOrder': {
+								  'active': false,
+								  'timePicker': '00:20'
+								},
+								'clientData': {
+								  'active': true
+								},
+								'sourceBox': {
+								  'active': true,
+								  'message': 'KDS'
+								},
+								'showName': {
+								  'active': true
+								},
+								'showIdentifier': {
+								  'active': true,
+								  'message': 'Orden'
+								},
+								'showNumerator': {
+								  'active': false
+								},
+								'showPagination': {
+								  'active': true
+								},
+								'keyboardShortcuts': {
+								  'confirmCloseOrderModal': '0',
+								  'cancelCloseOrderModal': 'v',
+								  'finishFirstOrder': 'h',
+								  'finishSecondOrder': '3',
+								  'finishThirdOrder': '1',
+								  'finishFourthOrder': 'f',
+								  'finishFifthOrder': 'j',
+								  'undo': 'c',
+								  'nextPage': 'i',
+								  'previousPage': 'g',
+								  'resetTime': 'r',
+								  'firstPage': 'q',
+								  'secondPage': 'w',
+								  'middlePage': 'e',
+								  'penultimatePage': 'x',
+								  'lastPage': 't',
+								  'power': 'a',
+								  'exit': 'm'
+								}
+							  }
+							}"
+			},
+			{
+			"nombre": "Pantalla3",
+			"ip": "10.101.27.60",
+			"cola": "SANDUCHE",
+			"imprime": "NO",
+			"impresoraNombre": "",
+ 			"impresoraIP": "",
+			"impresoraPuerto": 9100,
+			"contar": [],
+			"filtros": [
+				{"cadena":"S.","suprime":false},
+				{"cadena":"sanduche","suprime":false},
+				{"cadena":"twister","suprime":false},
+				{"cadena":"sandwich","suprime":false},
+				{"cadena":"ruster","suprime":false}
+			
+			],
+			"propiedades": "{
+							  'appearance': {
+								'cardColor': [
+								  {
+									'id': '1',
+									'color': '#98c530',
+									'minutes': '01:00',
+									'isFullBackground': false
+								  },
+								  {
+									'id': '2',
+									'color': '#fddf58',
+									'minutes': '02:00',
+									'isFullBackground': false
+								  },
+								  {
+									'id': '3',
+									'color': '#e75646',
+									'minutes': '03:00',
+									'isFullBackground': false
+								  },
+								  {
+									'id': '4',
+									'color': '#e75646',
+									'minutes': '04:00',
+									'isFullBackground': false
+								  }
+								],
+								'channelColor': [
+								  {
+									'id': '1h52sciu8031e34530ede71',
+									'color': '#bd10e0',
+									'channel': 'APP'
+								  },								  
+								  {
+									'id': '1h52sb3l10642cf80158dc4',
+									'color': '#4a90e2',
+									'channel': 'LOCAL'
+								  },
+								  {
+									'id': '1h52sb5er067b5616f29c7d',
+									'color': '#000000',
+									'channel': 'Llevar'
+								  },
+								  {
+									'id': '1h52sbd080bb9a563483e01',
+									'color': '#d0021b',
+									'channel': 'PedidosYa'
+								  },
+								  {
+									'id': '1h52sbdnh04b84106ce1de',
+									'color': '#d0021b',
+									'channel': 'RAPPI'
+								  },
+								  {
+									'id': '1h52sbdnh04b84106rt78z',
+									'color': '#ff8000',
+									'channel': 'RAPPI-TURBO'
+								  },
+								  {
+									'id': '1h69t3uge0af4333999ebc',
+									'color': '#7ed321',
+									'channel': 'Local'
+								  },
+								  {
+									'id': '1h69t3uge0af4333999epk',
+									'color': '#4a9882',
+									'channel': 'Pickup-Efectivo'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e2463fc7da',
+									'color': '#b8e986',
+									'channel': 'LUNCH'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e2463f41ty',
+									'color': '#ec728a',
+									'channel': 'CALLCENTER'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e2463fc7kk',
+									'color': '#008080',
+									'channel': 'KIOSCO'
+								  },
+								  {
+									'id': '1h52sbdnh04b84106ce1mp',
+									'color': '#0299d0',
+									'channel': 'SALON'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#0299d0',
+									'channel': 'Kiosko-Efectivo'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'Kiosko-Tarjeta'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'Pick-up-Tarjeta'
+								  },
+								  {
+									'id': '1h7ap0plu0dc6e246c7ee',
+									'color': '#d0021b',
+									'channel': 'App'
+								  }
+
+								],
+								'fontSize': '20px', 
+								'ordersDisplay': 'COLUMNS', 
+								'theme': 'DARK', 
+								'columnsPerScreen': 4, 
+								'columnSize': '260px',
+								'fontFamily': 'Arimo-Medium',
+								'screenName': '----',
+								'screenSplit': false,
+								'counters': false,
+								'footerHeight': '72px'
+							  },
+							  'preference': {
+								'finishOrder': {
+								  'active': false,
+								  'timePicker': '00:20'
+								},
+								'clientData': {
+								  'active': true
+								},
+								'sourceBox': {
+								  'active': true,
+								  'message': 'KDS'
+								},
+								'showName': {
+								  'active': true
+								},
+								'showIdentifier': {
+								  'active': true,
+								  'message': 'Orden'
+								},
+								'showNumerator': {
+								  'active': false
+								},
+								'showPagination': {
+								  'active': true
+								},
+								'keyboardShortcuts': {
+								  'confirmCloseOrderModal': '0',
+								  'cancelCloseOrderModal': 'v',
+								  'finishFirstOrder': 'h',
+								  'finishSecondOrder': '3',
+								  'finishThirdOrder': '1',
+								  'finishFourthOrder': 'f',
+								  'finishFifthOrder': 'j',
+								  'undo': 'c',
+								  'nextPage': 'i',
+								  'previousPage': 'g',
+								  'resetTime': 'r',
+								  'firstPage': 'q',
+								  'secondPage': 'w',
+								  'middlePage': 'e',
+								  'penultimatePage': 'x',
+								  'lastPage': 't',
+								  'power': 'a',
+								  'exit': 'm'
+								}
+							  }
+							}"
+			}
+			]
+}

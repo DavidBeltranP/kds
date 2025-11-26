@@ -1,0 +1,39 @@
+# =============================================================================
+# KDS Frontend - .gitignore
+# =============================================================================
+# Configuracion especifica para el frontend React de pantallas
+# =============================================================================
+
+# Dependencias
+node_modules/
+
+# Build
+dist/
+build/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporales
+*.tmp
+.cache/
+
+# Vite
+.vite/

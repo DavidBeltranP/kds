@@ -1,0 +1,72 @@
+# =============================================================================
+# KDS Backend - Dockerfile
+# =============================================================================
+# Multi-stage build para optimizar tamaño de imagen
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Stage 1: Builder
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Instalar dependencias de compilacion
+RUN apk add --no-cache python3 make g++
+
+# Copiar archivos de dependencias
+COPY backend/package*.json ./
+COPY backend/prisma ./prisma/
+
+# Instalar todas las dependencias (incluyendo devDependencies para build)
+RUN npm ci
+
+# Generar cliente Prisma
+RUN npx prisma generate
+
+# Copiar codigo fuente
+COPY backend/ .
+
+# Compilar TypeScript
+RUN npm run build
+
+# -----------------------------------------------------------------------------
+# Stage 2: Production
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Variables de entorno por defecto
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Crear usuario no-root para seguridad
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S kds -u 1001 -G nodejs
+
+# Instalar solo dependencias de produccion
+COPY backend/package*.json ./
+RUN npm ci --only=production && \
+    npm cache clean --force
+
+# Copiar Prisma schema y cliente generado
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Copiar aplicacion compilada
+COPY --from=builder /app/dist ./dist
+
+# Cambiar a usuario no-root
+USER kds
+
+# Exponer puerto
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+
+# Comando de inicio
+CMD ["node", "dist/index.js"]

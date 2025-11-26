@@ -1,0 +1,80 @@
+{
+  "_comment": "=================================================================",
+  "_comment2": "ARCHIVO DE EJEMPLO - NO USAR DIRECTAMENTE",
+  "_comment3": "=================================================================",
+  "_comment4": "Este archivo muestra la estructura de config.txt del sistema",
+  "_comment5": "anterior. En KDS v2.0, esta configuracion se maneja desde:",
+  "_comment6": "  - Variables de entorno (.env)",
+  "_comment7": "  - Base de datos (via Backoffice)",
+  "_comment8": "=================================================================",
+
+  "_migracion": {
+    "_nota": "Mapeo de campos antiguos a nuevos:",
+    "ServerName": "Ahora en variable MXP_SERVER en .env",
+    "Database": "Ahora en variable MXP_DATABASE en .env",
+    "Username": "Ahora en variable MXP_USER en .env",
+    "Password": "Ahora en variable MXP_PASSWORD en .env",
+    "Polling": "Ahora en variable MXP_POLLING_INTERVAL en .env",
+    "Pantallas": "Ahora se configuran desde Backoffice > Pantallas",
+    "Colas": "Ahora se configuran desde Backoffice > Colas",
+    "Colores": "Ahora se configuran desde Backoffice > Apariencia"
+  },
+
+  "ejemplo_sistema_anterior": {
+    "ServerName": "192.168.1.100",
+    "Database": "MAXPOINT",
+    "Username": "sa",
+    "Password": "TU_PASSWORD_AQUI",
+    "IntervaloPolling": 3000,
+    "Pantallas": [
+      {
+        "id": 1,
+        "nombre": "POLLOS-1",
+        "ip": "192.168.1.101",
+        "cola": "LINEAS",
+        "balanceo": true
+      },
+      {
+        "id": 2,
+        "nombre": "POLLOS-2",
+        "ip": "192.168.1.102",
+        "cola": "LINEAS",
+        "balanceo": true
+      },
+      {
+        "id": 3,
+        "nombre": "SANDUCHES",
+        "ip": "192.168.1.103",
+        "cola": "SANDUCHE",
+        "balanceo": false
+      }
+    ],
+    "Colas": [
+      {
+        "nombre": "LINEAS",
+        "filtro": "linea NOT IN ('SANDUCHE')"
+      },
+      {
+        "nombre": "SANDUCHE",
+        "filtro": "linea = 'SANDUCHE'"
+      }
+    ],
+    "Apariencia": {
+      "ColorFondo": "#1a1a2e",
+      "ColorCabecera": "#16213e",
+      "ColorTarjeta": "#0f3460",
+      "ColorTexto": "#e94560",
+      "Columnas": 4,
+      "Filas": 3
+    }
+  },
+
+  "_instrucciones": [
+    "1. NO uses este archivo directamente",
+    "2. Configura las credenciales de BD en .env (ver .env.example)",
+    "3. Inicia el sistema con docker compose up -d",
+    "4. Accede al Backoffice en http://localhost:8081",
+    "5. Crea las pantallas y colas desde la interfaz",
+    "6. Configura la apariencia visual desde Pantallas > Configurar"
+  ]
+}

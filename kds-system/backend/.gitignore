@@ -1,0 +1,55 @@
+# =============================================================================
+# Backend - .gitignore
+# =============================================================================
+# Configuracion especifica para el backend Node.js/Express
+# =============================================================================
+
+# Dependencias
+node_modules/
+
+# Build
+dist/
+build/
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+# Las migraciones SI deben versionarse
+!prisma/migrations/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporales
+*.tmp
+*.temp
+.cache/
+
+# Credenciales locales
+credentials/
+secrets/
+*.pem
+*.key
+
+# Archivos de configuracion del sistema anterior
+config.txt
+conf.txt

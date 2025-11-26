@@ -1,0 +1,375 @@
+// KDS Database Schema
+// PostgreSQL with Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USUARIOS Y AUTENTICACIÓN
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(OPERATOR)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  auditLogs AuditLog[]
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+// ============================================
+// COLAS Y CANALES
+// ============================================
+
+model Queue {
+  id           String           @id @default(cuid())
+  name         String           @unique
+  description  String?
+  distribution DistributionType @default(DISTRIBUTED)
+  active       Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  channels QueueChannel[]
+  filters  QueueFilter[]
+  screens  Screen[]
+}
+
+enum DistributionType {
+  DISTRIBUTED // D - Balanceado entre pantallas
+  SINGLE      // S - Una sola pantalla
+}
+
+model QueueChannel {
+  id        String   @id @default(cuid())
+  queueId   String
+  channel   String
+  color     String   @default("#4a90e2")
+  priority  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  queue Queue @relation(fields: [queueId], references: [id], onDelete: Cascade)
+
+  @@unique([queueId, channel])
+}
+
+model QueueFilter {
+  id        String  @id @default(cuid())
+  queueId   String
+  pattern   String // Patrón de filtro (ej: "sanduche", "twister")
+  suppress  Boolean @default(false) // Si true, oculta productos que coinciden
+  active    Boolean @default(true)
+
+  queue Queue @relation(fields: [queueId], references: [id], onDelete: Cascade)
+
+  @@unique([queueId, pattern])
+}
+
+// ============================================
+// PANTALLAS
+// ============================================
+
+model Screen {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  ip        String       @unique
+  queueId   String
+  status    ScreenStatus @default(OFFLINE)
+  apiKey    String       @unique @default(cuid())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  queue      Queue         @relation(fields: [queueId], references: [id])
+  printer    Printer?
+  appearance Appearance?
+  preference Preference?
+  keyboard   KeyboardConfig?
+  orders     Order[]
+  heartbeats Heartbeat[]
+}
+
+enum ScreenStatus {
+  ONLINE
+  OFFLINE
+  STANDBY
+}
+
+model Heartbeat {
+  id        String   @id @default(cuid())
+  screenId  String
+  timestamp DateTime @default(now())
+
+  screen Screen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+
+  @@index([screenId, timestamp])
+}
+
+// ============================================
+// IMPRESORAS
+// ============================================
+
+model Printer {
+  id       String  @id @default(cuid())
+  screenId String  @unique
+  name     String
+  ip       String
+  port     Int     @default(9100)
+  enabled  Boolean @default(true)
+
+  screen Screen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// APARIENCIA (por pantalla)
+// ============================================
+
+model Appearance {
+  id               String  @id @default(cuid())
+  screenId         String  @unique
+
+  // Tipografía
+  fontSize         String  @default("20px")
+  fontFamily       String  @default("Arimo-Medium")
+
+  // Layout
+  columnsPerScreen Int     @default(4)
+  columnSize       String  @default("260px")
+  footerHeight     String  @default("72px")
+  ordersDisplay    String  @default("COLUMNS") // COLUMNS | ROWS
+
+  // Tema
+  theme            String  @default("DARK") // DARK | LIGHT
+  screenName       String  @default("")
+  screenSplit      Boolean @default(false)
+  showCounters     Boolean @default(false)
+
+  screen      Screen       @relation(fields: [screenId], references: [id], onDelete: Cascade)
+  cardColors  CardColor[]
+  channelColors ChannelColor[]
+}
+
+model CardColor {
+  id               String  @id @default(cuid())
+  appearanceId     String
+  color            String  // Hex color
+  minutes          String  // Formato "MM:SS"
+  order            Int     // Orden de prioridad (1, 2, 3, 4)
+  isFullBackground Boolean @default(false)
+
+  appearance Appearance @relation(fields: [appearanceId], references: [id], onDelete: Cascade)
+
+  @@unique([appearanceId, order])
+}
+
+model ChannelColor {
+  id           String @id @default(cuid())
+  appearanceId String
+  channel      String
+  color        String // Hex color
+
+  appearance Appearance @relation(fields: [appearanceId], references: [id], onDelete: Cascade)
+
+  @@unique([appearanceId, channel])
+}
+
+// ============================================
+// PREFERENCIAS (por pantalla)
+// ============================================
+
+model Preference {
+  id                 String  @id @default(cuid())
+  screenId           String  @unique
+
+  // Orden
+  finishOrderActive  Boolean @default(false)
+  finishOrderTime    String  @default("00:20")
+
+  // Datos de cliente
+  showClientData     Boolean @default(true)
+  showName           Boolean @default(true)
+
+  // Identificadores
+  showIdentifier     Boolean @default(true)
+  identifierMessage  String  @default("Orden")
+  showNumerator      Boolean @default(false)
+
+  // UI
+  showPagination     Boolean @default(true)
+  sourceBoxActive    Boolean @default(true)
+  sourceBoxMessage   String  @default("KDS")
+
+  screen Screen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// CONFIGURACIÓN DE TECLADO/BOTONERA
+// ============================================
+
+model KeyboardConfig {
+  id        String @id @default(cuid())
+  screenId  String @unique
+
+  // Acciones simples
+  finishFirstOrder   String @default("h")
+  finishSecondOrder  String @default("3")
+  finishThirdOrder   String @default("1")
+  finishFourthOrder  String @default("f")
+  finishFifthOrder   String @default("j")
+  nextPage           String @default("i")
+  previousPage       String @default("g")
+  undo               String @default("c")
+  resetTime          String @default("r")
+
+  // Navegación rápida
+  firstPage          String @default("q")
+  secondPage         String @default("w")
+  middlePage         String @default("e")
+  penultimatePage    String @default("x")
+  lastPage           String @default("t")
+
+  // Modales
+  confirmModal       String @default("0")
+  cancelModal        String @default("v")
+
+  // Sistema
+  power              String @default("a")
+  exit               String @default("m")
+
+  // Combos (JSON string)
+  combos             String @default("[]")
+
+  // Configuración
+  debounceTime       Int    @default(200)
+
+  screen Screen @relation(fields: [screenId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// ÓRDENES
+// ============================================
+
+model Order {
+  id            String      @id @default(cuid())
+  externalId    String      @unique // ID de MAXPOINT
+  screenId      String?
+  channel       String
+  customerName  String?
+  identifier    String      // Número de orden
+  status        OrderStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  finishedAt    DateTime?
+  printedAt     DateTime?
+
+  screen Screen? @relation(fields: [screenId], references: [id])
+  items  OrderItem[]
+
+  @@index([screenId, status])
+  @@index([createdAt])
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+}
+
+model OrderItem {
+  id       String  @id @default(cuid())
+  orderId  String
+  name     String
+  quantity Int     @default(1)
+  notes    String?
+  modifier String?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// CONFIGURACIÓN GENERAL
+// ============================================
+
+model GeneralConfig {
+  id                     String  @id @default("general")
+
+  // Lectura de comandas
+  pollingInterval        Int     @default(2000) // ms
+  orderLifetime          Int     @default(4)    // horas
+
+  // Logs
+  logRetentionDays       Int     @default(5)
+
+  // Comandas
+  printTcp               Boolean @default(true)
+  orderAliveTime         Int     @default(300)  // segundos
+  deleteOrderKey         String  @default("/")
+  printRetries           Int     @default(3)
+  printWithoutScreens    Boolean @default(false)
+  printColumns           Int     @default(24)
+  printFontSize          String  @default("small") // small | medium | large
+
+  // Contadores
+  showOrdersAndCounters  Boolean @default(true)
+  countProducts          Boolean @default(false)
+
+  // Conexión MXP
+  mxpHost                String  @default("")
+  mxpUser                String  @default("")
+  mxpPassword            String  @default("")
+  mxpDatabase            String  @default("")
+
+  updatedAt              DateTime @updatedAt
+}
+
+// ============================================
+// CONTADORES DE PRODUCTOS
+// ============================================
+
+model ProductCounter {
+  id        String   @id @default(cuid())
+  screenId  String?
+  product   String
+  pattern   String   // Patrón para matching
+  count     Int      @default(0)
+  resetAt   DateTime @default(now())
+
+  @@unique([screenId, pattern])
+}
+
+// ============================================
+// AUDITORÍA
+// ============================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  oldValue  String?  // JSON
+  newValue  String?  // JSON
+  ip        String?
+  timestamp DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([timestamp])
+  @@index([entity, entityId])
+}

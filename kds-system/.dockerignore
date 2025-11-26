@@ -1,0 +1,152 @@
+# =============================================================================
+# KDS System - .dockerignore
+# =============================================================================
+# Archivos que NO deben incluirse en el contexto de build de Docker
+# Esto reduce el tamaño del contexto y acelera los builds
+# =============================================================================
+
+# =============================================================================
+# DEPENDENCIAS (se instalan durante el build)
+# =============================================================================
+node_modules/
+*/node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# =============================================================================
+# BUILD OUTPUT (se genera durante el build)
+# =============================================================================
+dist/
+*/dist/
+**/dist/
+build/
+*/build/
+**/build/
+
+# =============================================================================
+# ARCHIVOS DE ENTORNO Y SECRETOS
+# =============================================================================
+# CRITICO: Nunca incluir en imagen Docker
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+credentials/
+secrets/
+config.txt
+conf.txt
+
+# =============================================================================
+# GIT
+# =============================================================================
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# =============================================================================
+# DOCUMENTACION (no necesaria en runtime)
+# =============================================================================
+docs/
+*.md
+!README.md
+LICENSE
+CHANGELOG*
+CONTRIBUTING*
+
+# =============================================================================
+# TESTING (no necesario en produccion)
+# =============================================================================
+coverage/
+*/coverage/
+**/coverage/
+.nyc_output/
+*.test.ts
+*.test.tsx
+*.test.js
+*.test.jsx
+*.spec.ts
+*.spec.tsx
+*.spec.js
+*.spec.jsx
+__tests__/
+**/__tests__/
+__mocks__/
+**/__mocks__/
+jest.config.*
+vitest.config.*
+
+# =============================================================================
+# IDE Y EDITORES
+# =============================================================================
+.vscode/
+.idea/
+*.sublime-*
+*.swp
+*.swo
+*~
+
+# =============================================================================
+# SISTEMA OPERATIVO
+# =============================================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =============================================================================
+# LOGS
+# =============================================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# =============================================================================
+# DOCKER (evitar recursion)
+# =============================================================================
+# Los Dockerfiles se copian explicitamente si es necesario
+# docker-compose*.yml se usa desde fuera del contexto
+.docker/
+docker-data/
+
+# =============================================================================
+# CONFIGURACION DE DESARROLLO
+# =============================================================================
+.editorconfig
+.prettierrc*
+.prettierignore
+.eslintrc*
+.eslintignore
+tsconfig*.json
+!backend/tsconfig.json
+!kds-frontend/tsconfig.json
+!backoffice/tsconfig.json
+.babelrc*
+postcss.config.*
+tailwind.config.*
+
+# =============================================================================
+# MISC
+# =============================================================================
+Makefile
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Carpeta del sistema anterior
+inicial/
+KDS2/
+
+# Archivos de ejemplo y plantillas
+*.example
+!.env.example
+
+# Backups
+*.bak
+*.backup
+backups/

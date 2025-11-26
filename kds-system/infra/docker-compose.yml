@@ -1,0 +1,195 @@
+# =============================================================================
+# KDS System - Docker Compose (Produccion)
+# =============================================================================
+# Orquestacion de todos los servicios del sistema KDS
+#
+# Uso:
+#   docker compose -f infra/docker-compose.yml up -d
+#   docker compose -f infra/docker-compose.yml logs -f
+#   docker compose -f infra/docker-compose.yml down
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL - Base de datos principal
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: kds-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-kds}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Error: POSTGRES_PASSWORD es requerido}
+      POSTGRES_DB: ${POSTGRES_DB:-kds}
+      TZ: ${TZ:-America/Mexico_City}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-kds} -d ${POSTGRES_DB:-kds}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - kds-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Redis - Cache y Pub/Sub
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: kds-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:?Error: REDIS_PASSWORD es requerido}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kds-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Backend - API Node.js/Express
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.backend
+    container_name: kds-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Base de datos
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kds}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-kds}?schema=public
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:?Error: JWT_SECRET es requerido}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Error: JWT_REFRESH_SECRET es requerido}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      # MAXPOINT
+      MXP_SERVER: ${MXP_SERVER:-}
+      MXP_DATABASE: ${MXP_DATABASE:-MAXPOINT}
+      MXP_USER: ${MXP_USER:-}
+      MXP_PASSWORD: ${MXP_PASSWORD:-}
+      MXP_POLLING_INTERVAL: ${MXP_POLLING_INTERVAL:-3000}
+      MXP_ENABLED: ${MXP_ENABLED:-false}
+      # Configuracion
+      HEARTBEAT_INTERVAL: ${HEARTBEAT_INTERVAL:-10000}
+      HEARTBEAT_TIMEOUT: ${HEARTBEAT_TIMEOUT:-30000}
+      TZ: ${TZ:-America/Mexico_City}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    networks:
+      - kds-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # ---------------------------------------------------------------------------
+  # KDS Frontend - Pantallas de cocina
+  # ---------------------------------------------------------------------------
+  kds-frontend:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.kds-frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_WS_URL: ${VITE_WS_URL:-}
+    container_name: kds-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${KDS_FRONTEND_PORT:-8080}:80"
+    networks:
+      - kds-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Backoffice - Panel de administracion
+  # ---------------------------------------------------------------------------
+  backoffice:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.backoffice
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+    container_name: kds-backoffice
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${BACKOFFICE_PORT:-8081}:80"
+    networks:
+      - kds-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# -----------------------------------------------------------------------------
+# Volumenes persistentes
+# -----------------------------------------------------------------------------
+volumes:
+  postgres_data:
+    driver: local
+    name: kds-postgres-data
+  redis_data:
+    driver: local
+    name: kds-redis-data
+
+# -----------------------------------------------------------------------------
+# Red interna
+# -----------------------------------------------------------------------------
+networks:
+  kds-network:
+    driver: bridge
+    name: kds-network
