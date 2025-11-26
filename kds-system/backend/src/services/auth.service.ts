@@ -40,13 +40,13 @@ export class AuthService {
       };
 
       const accessToken = jwt.sign(payload, env.JWT_SECRET, {
-        expiresIn: env.JWT_ACCESS_EXPIRATION,
-      });
+        expiresIn: env.JWT_ACCESS_EXPIRATION as string,
+      } as jwt.SignOptions);
 
       const refreshToken = jwt.sign(
         { userId: user.id },
         env.JWT_SECRET,
-        { expiresIn: env.JWT_REFRESH_EXPIRATION }
+        { expiresIn: env.JWT_REFRESH_EXPIRATION as string } as jwt.SignOptions
       );
 
       logger.info(`User logged in: ${email}`);
@@ -88,8 +88,8 @@ export class AuthService {
       };
 
       const accessToken = jwt.sign(payload, env.JWT_SECRET, {
-        expiresIn: env.JWT_ACCESS_EXPIRATION,
-      });
+        expiresIn: env.JWT_ACCESS_EXPIRATION as string,
+      } as jwt.SignOptions);
 
       return { accessToken };
     } catch (error) {

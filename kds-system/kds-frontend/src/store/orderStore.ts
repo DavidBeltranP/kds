@@ -17,7 +17,7 @@ interface OrderState {
   setLastFinished: (orderId: string | null) => void;
 }
 
-export const useOrderStore = create<OrderState>((set, get) => ({
+export const useOrderStore = create<OrderState>((set) => ({
   orders: [],
   currentPage: 1,
   totalPages: 1,

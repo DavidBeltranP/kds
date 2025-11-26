@@ -201,7 +201,7 @@ export function ScreenPreview({
   const {
     showClientData = true,
     showName = true,
-    showIdentifier = true,
+    showIdentifier: _showIdentifier = true,
     identifierMessage = 'Orden',
     sourceBoxActive = true,
     sourceBoxMessage = 'KDS',
@@ -260,7 +260,7 @@ export function ScreenPreview({
     return columns;
   }, [orders, screenSplit, columnsPerScreen, maxItemsPerColumn]);
 
-  const renderColumn = (column: ColumnCard, idx: number) => {
+  const renderColumn = (column: ColumnCard, _idx: number) => {
     const { order, items, isFirstPart, isLastPart, totalParts } = column;
     const timeColor = getTimeColor(order.createdAt);
     const channelColor = defaultChannelColors[order.channel] || '#4a90e2';

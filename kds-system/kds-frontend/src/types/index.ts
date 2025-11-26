@@ -73,6 +73,34 @@ export interface AppearanceConfig {
   screenName: string;
   screenSplit: boolean;
   showCounters: boolean;
+  // Colores generales
+  backgroundColor: string;
+  headerColor: string;
+  headerTextColor: string;
+  cardColor: string;
+  textColor: string;
+  accentColor: string;
+  // Tipografia de productos
+  productFontFamily: string;
+  productFontSize: string;
+  productFontWeight: string;
+  // Tipografia de modificadores
+  modifierFontFamily: string;
+  modifierFontSize: string;
+  modifierFontColor: string;
+  modifierFontStyle: string;
+  // Cabecera de orden
+  headerFontFamily: string;
+  headerFontSize: string;
+  headerShowChannel: boolean;
+  headerShowTime: boolean;
+  // Disposicion adicional
+  rows: number;
+  maxItemsPerColumn: number;
+  // Opciones de visualizacion
+  showTimer: boolean;
+  showOrderNumber: boolean;
+  animationEnabled: boolean;
   cardColors: CardColor[];
   channelColors: ChannelColor[];
 }

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import clsx from 'clsx';
-import { useConfigStore, useScreenName } from '../../store/configStore';
+import { useConfigStore, useScreenName, useAppearance } from '../../store/configStore';
 import { useScreenStore, useIsConnected } from '../../store/screenStore';
 import { useTotalOrders, usePagination } from '../../store/orderStore';
 
@@ -8,10 +7,16 @@ export function Header() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const screenName = useScreenName();
   const config = useConfigStore((state) => state.config);
+  const appearance = useAppearance();
   const isConnected = useIsConnected();
   const totalOrders = useTotalOrders();
   const { currentPage, totalPages } = usePagination();
   const { comboProgress, showComboIndicator } = useScreenStore();
+
+  // Colores dinámicos
+  const headerColor = appearance?.headerColor || '#1a1a2e';
+  const headerTextColor = appearance?.headerTextColor || '#ffffff';
+  const accentColor = appearance?.accentColor || '#e94560';
 
   // Actualizar hora cada segundo
   useEffect(() => {
@@ -35,22 +40,44 @@ export function Header() {
   });
 
   return (
-    <header className="bg-gray-900 border-b border-gray-800 px-4 py-2">
-      <div className="flex items-center justify-between">
+    <header
+      style={{
+        backgroundColor: headerColor,
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
+        padding: '8px 16px',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Left - Screen Name & Status */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div
-              className={clsx(
-                'w-3 h-3 rounded-full',
-                isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-              )}
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                backgroundColor: isConnected ? '#22c55e' : '#ef4444',
+                animation: isConnected ? 'pulse 2s infinite' : 'none',
+              }}
             />
-            <span className="text-white font-bold text-lg">{screenName}</span>
+            <span
+              style={{
+                color: headerTextColor,
+                fontWeight: 'bold',
+                fontSize: '1.125rem',
+              }}
+            >
+              {screenName}
+            </span>
           </div>
 
           {config?.queue && (
-            <span className="text-gray-400 text-sm">
+            <span
+              style={{
+                color: `${headerTextColor}99`,
+                fontSize: '0.875rem',
+              }}
+            >
               Cola: {config.queue.name}
             </span>
           )}
@@ -58,18 +85,51 @@ export function Header() {
 
         {/* Center - Combo Progress Indicator */}
         {showComboIndicator && (
-          <div className="absolute left-1/2 transform -translate-x-1/2">
-            <div className="bg-gray-800 rounded-full px-4 py-2 flex items-center gap-3">
-              <span className="text-yellow-400 text-sm font-medium">
+          <div
+            style={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                borderRadius: '9999px',
+                padding: '8px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+              }}
+            >
+              <span
+                style={{
+                  color: '#facc15',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                }}
+              >
                 STANDBY
               </span>
-              <div className="w-32 h-2 bg-gray-700 rounded-full overflow-hidden">
+              <div
+                style={{
+                  width: '128px',
+                  height: '8px',
+                  backgroundColor: 'rgba(255,255,255,0.2)',
+                  borderRadius: '9999px',
+                  overflow: 'hidden',
+                }}
+              >
                 <div
-                  className="h-full bg-yellow-400 transition-all duration-100"
-                  style={{ width: `${comboProgress}%` }}
+                  style={{
+                    height: '100%',
+                    backgroundColor: '#facc15',
+                    width: `${comboProgress}%`,
+                    transition: 'width 100ms',
+                  }}
                 />
               </div>
-              <span className="text-white text-sm">
+              <span style={{ color: '#fff', fontSize: '0.875rem' }}>
                 {Math.round(comboProgress)}%
               </span>
             </div>
@@ -77,29 +137,71 @@ export function Header() {
         )}
 
         {/* Right - Time & Stats */}
-        <div className="flex items-center gap-6">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           {/* Orders Count */}
-          <div className="text-center">
-            <div className="text-2xl font-bold text-white">{totalOrders}</div>
-            <div className="text-xs text-gray-400">PENDIENTES</div>
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                color: accentColor,
+              }}
+            >
+              {totalOrders}
+            </div>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                color: `${headerTextColor}99`,
+              }}
+            >
+              PENDIENTES
+            </div>
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="text-center">
-              <div className="text-lg font-medium text-white">
+            <div style={{ textAlign: 'center' }}>
+              <div
+                style={{
+                  fontSize: '1.125rem',
+                  fontWeight: '500',
+                  color: headerTextColor,
+                }}
+              >
                 {currentPage}/{totalPages}
               </div>
-              <div className="text-xs text-gray-400">PAGINA</div>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  color: `${headerTextColor}99`,
+                }}
+              >
+                PAGINA
+              </div>
             </div>
           )}
 
           {/* Time */}
-          <div className="text-right">
-            <div className="text-xl font-mono font-bold text-white">
+          <div style={{ textAlign: 'right' }}>
+            <div
+              style={{
+                fontSize: '1.25rem',
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                color: headerTextColor,
+              }}
+            >
               {timeString}
             </div>
-            <div className="text-xs text-gray-400">{dateString}</div>
+            <div
+              style={{
+                fontSize: '0.75rem',
+                color: `${headerTextColor}99`,
+              }}
+            >
+              {dateString}
+            </div>
           </div>
         </div>
       </div>

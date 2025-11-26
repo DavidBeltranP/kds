@@ -19,7 +19,7 @@ interface ScreenState {
   showCombo: (show: boolean) => void;
 }
 
-export const useScreenStore = create<ScreenState>((set, get) => ({
+export const useScreenStore = create<ScreenState>((set) => ({
   status: 'OFFLINE',
   isStandby: false,
   isConnected: false,

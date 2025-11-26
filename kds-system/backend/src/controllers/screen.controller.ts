@@ -9,6 +9,7 @@ import {
   AuthenticatedRequest,
 } from '../types';
 import { asyncHandler, AppError } from '../middlewares/error.middleware';
+import { websocketService } from '../services/websocket.service';
 
 /**
  * GET /api/screens
@@ -155,7 +156,38 @@ export const updateAppearance = asyncHandler(
       where: { screenId: id },
       create: {
         screenId: id,
-        ...data,
+        fontSize: data.fontSize,
+        fontFamily: data.fontFamily,
+        columnsPerScreen: data.columns || data.columnsPerScreen,
+        columnSize: data.columnSize,
+        footerHeight: data.footerHeight,
+        ordersDisplay: data.ordersDisplay,
+        theme: data.theme,
+        screenName: data.screenName,
+        screenSplit: data.screenSplit,
+        showCounters: data.showCounters,
+        backgroundColor: data.backgroundColor,
+        headerColor: data.headerColor,
+        headerTextColor: data.headerTextColor,
+        cardColor: data.cardColor,
+        textColor: data.textColor,
+        accentColor: data.accentColor,
+        productFontFamily: data.productFontFamily,
+        productFontSize: data.productFontSize,
+        productFontWeight: data.productFontWeight,
+        modifierFontFamily: data.modifierFontFamily,
+        modifierFontSize: data.modifierFontSize,
+        modifierFontColor: data.modifierFontColor,
+        modifierFontStyle: data.modifierFontStyle,
+        headerFontFamily: data.headerFontFamily,
+        headerFontSize: data.headerFontSize,
+        headerShowChannel: data.headerShowChannel,
+        headerShowTime: data.headerShowTime,
+        rows: data.rows,
+        maxItemsPerColumn: data.maxItemsPerColumn,
+        showTimer: data.showTimer,
+        showOrderNumber: data.showOrderNumber,
+        animationEnabled: data.animationEnabled,
         cardColors: data.cardColors
           ? {
               create: data.cardColors,
@@ -170,7 +202,7 @@ export const updateAppearance = asyncHandler(
       update: {
         fontSize: data.fontSize,
         fontFamily: data.fontFamily,
-        columnsPerScreen: data.columnsPerScreen,
+        columnsPerScreen: data.columns || data.columnsPerScreen,
         columnSize: data.columnSize,
         footerHeight: data.footerHeight,
         ordersDisplay: data.ordersDisplay,
@@ -178,6 +210,28 @@ export const updateAppearance = asyncHandler(
         screenName: data.screenName,
         screenSplit: data.screenSplit,
         showCounters: data.showCounters,
+        backgroundColor: data.backgroundColor,
+        headerColor: data.headerColor,
+        headerTextColor: data.headerTextColor,
+        cardColor: data.cardColor,
+        textColor: data.textColor,
+        accentColor: data.accentColor,
+        productFontFamily: data.productFontFamily,
+        productFontSize: data.productFontSize,
+        productFontWeight: data.productFontWeight,
+        modifierFontFamily: data.modifierFontFamily,
+        modifierFontSize: data.modifierFontSize,
+        modifierFontColor: data.modifierFontColor,
+        modifierFontStyle: data.modifierFontStyle,
+        headerFontFamily: data.headerFontFamily,
+        headerFontSize: data.headerFontSize,
+        headerShowChannel: data.headerShowChannel,
+        headerShowTime: data.headerShowTime,
+        rows: data.rows,
+        maxItemsPerColumn: data.maxItemsPerColumn,
+        showTimer: data.showTimer,
+        showOrderNumber: data.showOrderNumber,
+        animationEnabled: data.animationEnabled,
       },
     });
 
@@ -211,8 +265,11 @@ export const updateAppearance = asyncHandler(
       });
     }
 
-    // Invalidar cache
+    // Invalidar cache y notificar al frontend
     await screenService.invalidateConfigCache(id);
+
+    // Broadcast directo al WebSocket (bypass Redis PubSub)
+    await websocketService.broadcastConfigUpdate(id);
 
     res.json({ message: 'Appearance updated' });
   }

@@ -1,13 +1,11 @@
-import { useEffect } from 'react';
 import { Header } from './components/Header';
 import { OrderGrid } from './components/OrderGrid';
 import { Footer } from './components/Footer';
 import { StandbyScreen } from './components/StandbyScreen';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useKeyboardController } from './hooks/useKeyboard';
-import { useConfigStore, useTheme } from './store/configStore';
-import { useScreenStore, useIsStandby } from './store/screenStore';
-import clsx from 'clsx';
+import { useConfigStore, useAppearance } from './store/configStore';
+import { useIsStandby } from './store/screenStore';
 
 // Obtener configuración desde URL params o variables de entorno
 function getScreenConfig() {
@@ -22,7 +20,7 @@ function App() {
   const { screenId, apiKey } = getScreenConfig();
   const { isLoading, error } = useConfigStore();
   const isStandby = useIsStandby();
-  const theme = useTheme();
+  const appearance = useAppearance();
 
   // Inicializar WebSocket
   useWebSocket(screenId, apiKey);
@@ -88,12 +86,17 @@ function App() {
   }
 
   // Main view
+  const backgroundColor = appearance?.backgroundColor || '#f0f2f5';
+  const textColor = appearance?.textColor || '#1a1a2e';
+
   return (
     <div
-      className={clsx(
-        'min-h-screen flex flex-col',
-        theme === 'DARK' ? 'bg-kds-darker text-white' : 'bg-gray-100 text-gray-900'
-      )}
+      className="min-h-screen flex flex-col"
+      style={{
+        backgroundColor,
+        color: textColor,
+        fontFamily: appearance?.fontFamily || 'Inter, sans-serif',
+      }}
     >
       <Header />
       <OrderGrid />

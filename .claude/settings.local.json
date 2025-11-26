@@ -22,7 +22,17 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nfix: Orders page and add screen preview functionality\n\n- Fix Orders page data handling for backend response format\n- Add test order generation endpoint for development\n- Create ScreenPreview component for real-time appearance preview\n- Integrate preview into Appearance configuration page\n- Add generateTest API function in backoffice\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git commit:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(python:*)",
+      "Bash(cmd //c \"taskkill /F /PID 10132\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWlmNzQ5aDcwMDAwejJyamlhdTh2dW9pIiwiZW1haWwiOiJhZG1pbkBrZmMuY29tLmVjIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzY0MTg0OTI5LCJleHAiOjE3NjQxODU4Mjl9.2X6F5YIQUZFZ4P34VgdIR2a5EhXrOqS7qdJlG12qbac\")",
+      "Bash(node -e:*)",
+      "Bash(node:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWlmNzQ5aDcwMDAwejJyamlhdTh2dW9pIiwiZW1haWwiOiJhZG1pbkBrZmMuY29tLmVjIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzY0MTg5MjU5LCJleHAiOjE3NjQxOTAxNTl9.yCikQ8jhKaiqWNNaoHRcBk178g6MC3tZ8MZNSWVcQGc\")"
     ],
     "deny": [],
     "ask": []

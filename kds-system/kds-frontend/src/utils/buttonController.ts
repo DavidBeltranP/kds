@@ -15,8 +15,8 @@ export interface ComboAction {
 export class ButtonController {
   private pressedKeys: Set<string> = new Set();
   private keyTimestamps: Map<string, number> = new Map();
-  private comboTimers: Map<string, NodeJS.Timeout> = new Map();
-  private comboProgressIntervals: Map<string, NodeJS.Timeout> = new Map();
+  private comboTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private comboProgressIntervals: Map<string, ReturnType<typeof setInterval>> = new Map();
   private lastActionTime: number = 0;
   private debounceTime: number;
   private actions: ButtonAction[];
@@ -165,19 +165,21 @@ export class ButtonController {
     }
   }
 
-  private cancelAllCombos(): void {
+  private cancelAllCombos(resetProgress: boolean = true): void {
     this.comboTimers.forEach((timer) => clearTimeout(timer));
     this.comboTimers.clear();
 
     this.comboProgressIntervals.forEach((interval) => clearInterval(interval));
     this.comboProgressIntervals.clear();
 
-    // Resetear progreso de todos los combos
-    this.combos.forEach((combo) => {
-      if (combo.onProgress) {
-        combo.onProgress(0);
-      }
-    });
+    // Resetear progreso de todos los combos (solo si no estamos destruyendo)
+    if (resetProgress) {
+      this.combos.forEach((combo) => {
+        if (combo.onProgress) {
+          combo.onProgress(0);
+        }
+      });
+    }
   }
 
   public updateActions(actions: ButtonAction[]): void {
@@ -191,6 +193,7 @@ export class ButtonController {
   public destroy(): void {
     document.removeEventListener('keydown', this.handleKeyDown);
     document.removeEventListener('keyup', this.handleKeyUp);
-    this.cancelAllCombos();
+    // No resetear progreso durante destroy para evitar setState en cleanup
+    this.cancelAllCombos(false);
   }
 }

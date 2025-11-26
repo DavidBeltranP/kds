@@ -38,10 +38,10 @@ export async function getMxpPool(): Promise<sql.ConnectionPool> {
 export async function checkMxpConnection(): Promise<boolean> {
   try {
     const p = await getMxpPool();
-    const result = await p.request().query('SELECT 1 as test');
+    const result = await p.request().query<{ test: number }>('SELECT 1 as test');
     return result.recordset[0].test === 1;
-  } catch (error) {
-    console.error('MXP connection failed:', error);
+  } catch (error: unknown) {
+    console.error('MXP connection failed:', error instanceof Error ? error.message : error);
     return false;
   }
 }

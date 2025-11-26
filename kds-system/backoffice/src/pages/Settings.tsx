@@ -66,7 +66,7 @@ interface HealthStatus {
 
 export function Settings() {
   const [loading, setLoading] = useState(true);
-  const [generalConfig, setGeneralConfig] = useState<GeneralConfig | null>(null);
+  const [_generalConfig, setGeneralConfig] = useState<GeneralConfig | null>(null);
   const [mxpConfig, setMxpConfig] = useState<MxpConfig | null>(null);
   const [pollingStatus, setPollingStatus] = useState<PollingStatus | null>(null);
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);

@@ -160,6 +160,40 @@ model Appearance {
   screenSplit      Boolean @default(false)
   showCounters     Boolean @default(false)
 
+  // Colores generales
+  backgroundColor    String  @default("#f0f2f5")
+  headerColor        String  @default("#1a1a2e")
+  headerTextColor    String  @default("#ffffff")
+  cardColor          String  @default("#ffffff")
+  textColor          String  @default("#1a1a2e")
+  accentColor        String  @default("#e94560")
+
+  // Tipografia de productos
+  productFontFamily  String  @default("Inter, sans-serif")
+  productFontSize    String  @default("medium")
+  productFontWeight  String  @default("bold")
+
+  // Tipografia de modificadores
+  modifierFontFamily String  @default("Inter, sans-serif")
+  modifierFontSize   String  @default("small")
+  modifierFontColor  String  @default("#666666")
+  modifierFontStyle  String  @default("italic")
+
+  // Cabecera de orden
+  headerFontFamily   String  @default("Inter, sans-serif")
+  headerFontSize     String  @default("medium")
+  headerShowChannel  Boolean @default(true)
+  headerShowTime     Boolean @default(true)
+
+  // Disposicion adicional
+  rows               Int     @default(3)
+  maxItemsPerColumn  Int     @default(6)
+
+  // Opciones de visualizacion
+  showTimer          Boolean @default(true)
+  showOrderNumber    Boolean @default(true)
+  animationEnabled   Boolean @default(true)
+
   screen      Screen       @relation(fields: [screenId], references: [id], onDelete: Cascade)
   cardColors  CardColor[]
   channelColors ChannelColor[]

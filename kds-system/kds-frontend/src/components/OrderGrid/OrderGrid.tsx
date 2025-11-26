@@ -1,13 +1,26 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { OrderCard } from '../OrderCard';
 import { useOrderStore, useCurrentPageOrders } from '../../store/orderStore';
-import { useConfigStore, useAppearance, usePreference } from '../../store/configStore';
+import { useAppearance, usePreference } from '../../store/configStore';
+import type { Order, OrderItem } from '../../types';
+
+interface ColumnCard {
+  order: Order;
+  items: OrderItem[];
+  partNumber: number;
+  totalParts: number;
+  isFirstPart: boolean;
+  isLastPart: boolean;
+}
 
 export function OrderGrid() {
   const appearance = useAppearance();
   const preference = usePreference();
   const columnsPerScreen = appearance?.columnsPerScreen || 4;
+  const screenSplit = appearance?.screenSplit ?? true;
+  const maxItemsPerColumn = appearance?.maxItemsPerColumn || 6;
 
+  // Usar la misma cantidad para paginación y obtención de órdenes
   const currentOrders = useCurrentPageOrders(columnsPerScreen);
   const { calculatePages } = useOrderStore();
 
@@ -16,7 +29,42 @@ export function OrderGrid() {
     calculatePages(columnsPerScreen);
   }, [columnsPerScreen, calculatePages, useOrderStore.getState().orders.length]);
 
-  if (currentOrders.length === 0) {
+  // Calcular columnas con split de órdenes largas
+  const displayColumns = useMemo((): ColumnCard[] => {
+    const columns: ColumnCard[] = [];
+
+    for (const order of currentOrders) {
+      if (columns.length >= columnsPerScreen) break;
+
+      const needsSplit = screenSplit && order.items.length > maxItemsPerColumn;
+
+      if (!needsSplit) {
+        columns.push({
+          order,
+          items: order.items,
+          partNumber: 1,
+          totalParts: 1,
+          isFirstPart: true,
+          isLastPart: true,
+        });
+      } else {
+        const totalParts = Math.ceil(order.items.length / maxItemsPerColumn);
+        for (let i = 0; i < totalParts && columns.length < columnsPerScreen; i++) {
+          columns.push({
+            order,
+            items: order.items.slice(i * maxItemsPerColumn, (i + 1) * maxItemsPerColumn),
+            partNumber: i + 1,
+            totalParts,
+            isFirstPart: i === 0,
+            isLastPart: i === totalParts - 1,
+          });
+        }
+      }
+    }
+    return columns;
+  }, [currentOrders, screenSplit, columnsPerScreen, maxItemsPerColumn]);
+
+  if (displayColumns.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
@@ -46,25 +94,63 @@ export function OrderGrid() {
       className="flex-1 p-4 overflow-hidden"
       style={{
         display: 'grid',
-        gridTemplateColumns: `repeat(${columnsPerScreen}, ${appearance?.columnSize || '260px'})`,
+        gridTemplateColumns: `repeat(${columnsPerScreen}, 1fr)`,
+        gridTemplateRows: '1fr',
         gap: '1rem',
-        justifyContent: 'center',
-        alignContent: 'start',
+        maxWidth: '100%',
       }}
     >
-      {currentOrders.map((order, index) => (
+      {displayColumns.map((column, index) => (
         <OrderCard
-          key={order.id}
-          order={order}
+          key={`${column.order.id}-${column.partNumber}`}
+          order={column.order}
+          items={column.items}
           index={index}
+          partNumber={column.partNumber}
+          totalParts={column.totalParts}
+          isFirstPart={column.isFirstPart}
+          isLastPart={column.isLastPart}
           cardColors={appearance?.cardColors || []}
           channelColors={appearance?.channelColors || []}
           showIdentifier={preference?.showIdentifier ?? true}
           identifierMessage={preference?.identifierMessage || 'Orden'}
           showName={preference?.showName ?? true}
           fontSize={appearance?.fontSize || '16px'}
-          columnSize={appearance?.columnSize || '260px'}
+          // Props de apariencia
+          cardColor={appearance?.cardColor}
+          textColor={appearance?.textColor}
+          headerTextColor={appearance?.headerTextColor}
+          accentColor={appearance?.accentColor}
+          productFontFamily={appearance?.productFontFamily}
+          productFontSize={appearance?.productFontSize}
+          productFontWeight={appearance?.productFontWeight}
+          modifierFontFamily={appearance?.modifierFontFamily}
+          modifierFontSize={appearance?.modifierFontSize}
+          modifierFontColor={appearance?.modifierFontColor}
+          modifierFontStyle={appearance?.modifierFontStyle}
+          showTimer={appearance?.showTimer}
+          showOrderNumber={appearance?.showOrderNumber}
+          headerFontSize={appearance?.headerFontSize}
         />
+      ))}
+
+      {/* Columnas vacías */}
+      {Array.from({ length: columnsPerScreen - displayColumns.length }).map((_, i) => (
+        <div
+          key={`empty-${i}`}
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: '8px',
+            border: '2px dashed rgba(255,255,255,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'rgba(255,255,255,0.2)',
+            fontSize: '14px',
+          }}
+        >
+          Sin orden
+        </div>
       ))}
     </div>
   );

@@ -95,7 +95,9 @@ export class WebSocketService {
     redisSub.subscribe(REDIS_KEYS.screenStatusChanged());
 
     redisSub.on('message', async (channel, message) => {
+      wsLogger.info(`[REDIS] Received message on channel: ${channel}`);
       const data = JSON.parse(message);
+      wsLogger.info(`[REDIS] Message data: ${JSON.stringify(data)}`);
 
       switch (channel) {
         case REDIS_KEYS.configUpdated():
@@ -273,6 +275,7 @@ export class WebSocketService {
   async broadcastConfigUpdate(screenId: string): Promise<void> {
     if (!this.io) return;
 
+    wsLogger.info(`[WEBSOCKET] Broadcasting config update to screen ${screenId}`);
     const config = await screenService.getScreenConfig(screenId);
     this.io.to(`screen:${screenId}`).emit('config:update', config);
 

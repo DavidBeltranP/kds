@@ -8,10 +8,10 @@ import type { WsOrdersUpdate, ScreenConfig } from '../types';
 const HEARTBEAT_INTERVAL = 5000; // 5 segundos
 
 export function useWebSocket(screenId: string, apiKey: string) {
-  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { setConfig, setLoading, setError } = useConfigStore();
-  const { setOrders, addOrders, removeOrder } = useOrderStore();
+  const { setOrders, removeOrder } = useOrderStore();
   const { setConnected, updateHeartbeat, setStatus } = useScreenStore();
 
   useEffect(() => {

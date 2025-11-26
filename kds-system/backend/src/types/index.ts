@@ -66,6 +66,34 @@ export interface AppearanceConfig {
   screenName: string;
   screenSplit: boolean;
   showCounters: boolean;
+  // Colores generales
+  backgroundColor: string;
+  headerColor: string;
+  headerTextColor: string;
+  cardColor: string;
+  textColor: string;
+  accentColor: string;
+  // Tipografia de productos
+  productFontFamily: string;
+  productFontSize: string;
+  productFontWeight: string;
+  // Tipografia de modificadores
+  modifierFontFamily: string;
+  modifierFontSize: string;
+  modifierFontColor: string;
+  modifierFontStyle: string;
+  // Cabecera de orden
+  headerFontFamily: string;
+  headerFontSize: string;
+  headerShowChannel: boolean;
+  headerShowTime: boolean;
+  // Disposicion adicional
+  rows: number;
+  maxItemsPerColumn: number;
+  // Opciones de visualizacion
+  showTimer: boolean;
+  showOrderNumber: boolean;
+  animationEnabled: boolean;
   cardColors: CardColorConfig[];
   channelColors: ChannelColorConfig[];
 }
@@ -287,6 +315,42 @@ export const updateAppearanceSchema = z.object({
   screenName: z.string().optional(),
   screenSplit: z.boolean().optional(),
   showCounters: z.boolean().optional(),
+
+  // Colores generales
+  backgroundColor: z.string().optional(),
+  headerColor: z.string().optional(),
+  headerTextColor: z.string().optional(),
+  cardColor: z.string().optional(),
+  textColor: z.string().optional(),
+  accentColor: z.string().optional(),
+
+  // Tipografia de productos
+  productFontFamily: z.string().optional(),
+  productFontSize: z.string().optional(),
+  productFontWeight: z.string().optional(),
+
+  // Tipografia de modificadores
+  modifierFontFamily: z.string().optional(),
+  modifierFontSize: z.string().optional(),
+  modifierFontColor: z.string().optional(),
+  modifierFontStyle: z.string().optional(),
+
+  // Cabecera de orden
+  headerFontFamily: z.string().optional(),
+  headerFontSize: z.string().optional(),
+  headerShowChannel: z.boolean().optional(),
+  headerShowTime: z.boolean().optional(),
+
+  // Disposicion
+  columns: z.number().int().min(1).max(10).optional(),
+  rows: z.number().int().min(1).max(10).optional(),
+  maxItemsPerColumn: z.number().int().min(1).max(20).optional(),
+
+  // Opciones de visualizacion
+  showTimer: z.boolean().optional(),
+  showOrderNumber: z.boolean().optional(),
+  animationEnabled: z.boolean().optional(),
+
   cardColors: z.array(z.object({
     color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
     minutes: z.string().regex(/^\d{2}:\d{2}$/),
