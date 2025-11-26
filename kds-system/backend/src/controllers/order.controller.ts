@@ -187,6 +187,18 @@ export const getOrderStats = asyncHandler(
 );
 
 /**
+ * GET /api/orders/dashboard-stats
+ * Obtener estadísticas detalladas para el dashboard
+ */
+export const getDashboardStats = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { timeLimit = '5' } = req.query;
+    const stats = await orderService.getDashboardStats(parseInt(timeLimit as string));
+    res.json(stats);
+  }
+);
+
+/**
  * GET /api/orders/recently-finished/:screenId
  * Obtener órdenes recientemente finalizadas (para undo)
  */

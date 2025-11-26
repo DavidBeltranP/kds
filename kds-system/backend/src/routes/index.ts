@@ -3,6 +3,7 @@ import { authenticate, authorize } from '../middlewares/auth.middleware';
 
 // Controllers
 import * as authController from '../controllers/auth.controller';
+import * as userController from '../controllers/user.controller';
 import * as screenController from '../controllers/screen.controller';
 import * as queueController from '../controllers/queue.controller';
 import * as orderController from '../controllers/order.controller';
@@ -20,6 +21,21 @@ router.post(
   '/auth/change-password',
   authenticate,
   authController.changePassword
+);
+
+// ============================================
+// USER ROUTES
+// ============================================
+router.get('/users', authenticate, authorize('ADMIN'), userController.getAllUsers);
+router.get('/users/:id', authenticate, authorize('ADMIN'), userController.getUser);
+router.post('/users', authenticate, authorize('ADMIN'), userController.createUser);
+router.put('/users/:id', authenticate, authorize('ADMIN'), userController.updateUser);
+router.delete('/users/:id', authenticate, authorize('ADMIN'), userController.deleteUser);
+router.post(
+  '/users/:id/toggle-active',
+  authenticate,
+  authorize('ADMIN'),
+  userController.toggleUserActive
 );
 
 // ============================================
@@ -153,6 +169,7 @@ router.post(
 // ============================================
 router.get('/orders', authenticate, orderController.getAllOrders);
 router.get('/orders/stats', authenticate, orderController.getOrderStats);
+router.get('/orders/dashboard-stats', authenticate, orderController.getDashboardStats);
 router.get('/orders/:id', authenticate, orderController.getOrder);
 router.get(
   '/orders/screen/:screenId',

@@ -13,6 +13,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   OrderedListOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 
@@ -25,40 +26,79 @@ export function Layout() {
   const { user, logout } = useAuthStore();
   const { token } = theme.useToken();
 
+  const isAdmin = user?.role === 'ADMIN';
+  const isOperator = user?.role === 'OPERATOR';
+  const isViewer = user?.role === 'VIEWER';
+
+  // Menu items filtrados por rol
   const menuItems: MenuProps['items'] = [
     {
       key: '/',
       icon: <DashboardOutlined />,
       label: 'Dashboard',
     },
-    {
-      key: '/screens',
-      icon: <DesktopOutlined />,
-      label: 'Pantallas',
-    },
-    {
-      key: '/queues',
-      icon: <UnorderedListOutlined />,
-      label: 'Colas',
-    },
-    {
-      key: '/orders',
-      icon: <OrderedListOutlined />,
-      label: 'Ordenes',
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: '/appearance',
-      icon: <BgColorsOutlined />,
-      label: 'Apariencia',
-    },
-    {
-      key: '/settings',
-      icon: <SettingOutlined />,
-      label: 'Configuracion',
-    },
+    // Solo ADMIN y OPERATOR pueden ver Pantallas
+    ...(isAdmin || isOperator
+      ? [
+          {
+            key: '/screens',
+            icon: <DesktopOutlined />,
+            label: 'Pantallas',
+          },
+        ]
+      : []),
+    // Solo ADMIN puede ver Colas
+    ...(isAdmin
+      ? [
+          {
+            key: '/queues',
+            icon: <UnorderedListOutlined />,
+            label: 'Colas',
+          },
+        ]
+      : []),
+    // Solo ADMIN y OPERATOR pueden ver Ordenes
+    ...(isAdmin || isOperator
+      ? [
+          {
+            key: '/orders',
+            icon: <OrderedListOutlined />,
+            label: 'Ordenes',
+          },
+        ]
+      : []),
+    // Divider solo si no es VIEWER
+    ...(!isViewer ? [{ type: 'divider' as const }] : []),
+    // Solo ADMIN y OPERATOR pueden ver Apariencia
+    ...(isAdmin || isOperator
+      ? [
+          {
+            key: '/appearance',
+            icon: <BgColorsOutlined />,
+            label: 'Apariencia',
+          },
+        ]
+      : []),
+    // Solo ADMIN puede ver Configuracion
+    ...(isAdmin
+      ? [
+          {
+            key: '/settings',
+            icon: <SettingOutlined />,
+            label: 'Configuracion',
+          },
+        ]
+      : []),
+    // Solo ADMIN puede ver Usuarios
+    ...(isAdmin
+      ? [
+          {
+            key: '/users',
+            icon: <TeamOutlined />,
+            label: 'Usuarios',
+          },
+        ]
+      : []),
   ];
 
   const userMenuItems: MenuProps['items'] = [

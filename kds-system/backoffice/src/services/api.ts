@@ -108,9 +108,23 @@ export const ordersApi = {
   cancel: (id: string, reason?: string) =>
     api.post(`/orders/${id}/cancel`, { reason }),
   getStats: () => api.get('/orders/stats'),
+  getDashboardStats: (timeLimit?: number) =>
+    api.get('/orders/dashboard-stats', { params: { timeLimit } }),
   cleanup: (hours?: number) => api.delete('/orders/cleanup', { params: { hours } }),
-  generateTest: (count: number) => api.post('/orders/generate-test', { count }),
+  generateTest: (count: number, includeLong?: boolean) =>
+    api.post('/orders/generate-test', { count, includeLong }),
   deleteTestOrders: () => api.delete('/orders/test-orders'),
+};
+
+// Users
+export const usersApi = {
+  getAll: () => api.get('/users'),
+  get: (id: string) => api.get(`/users/${id}`),
+  create: (data: { email: string; password: string; name: string; role: string }) =>
+    api.post('/users', data),
+  update: (id: string, data: any) => api.put(`/users/${id}`, data),
+  delete: (id: string) => api.delete(`/users/${id}`),
+  toggleActive: (id: string) => api.post(`/users/${id}/toggle-active`),
 };
 
 // Config

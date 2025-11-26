@@ -11,6 +11,7 @@ import { Queues } from './pages/Queues';
 import { Orders } from './pages/Orders';
 import { Appearance } from './pages/Appearance';
 import { Settings } from './pages/Settings';
+import { Users } from './pages/Users';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -31,6 +32,23 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+}
+
+// Componente para proteger rutas por rol
+function RoleRoute({
+  children,
+  allowedRoles,
+}: {
+  children: React.ReactNode;
+  allowedRoles: string[];
+}) {
+  const { user } = useAuthStore();
+
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 function App() {
@@ -79,11 +97,54 @@ function App() {
             }
           >
             <Route index element={<Dashboard />} />
-            <Route path="screens" element={<Screens />} />
-            <Route path="queues" element={<Queues />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="appearance" element={<Appearance />} />
-            <Route path="settings" element={<Settings />} />
+            <Route
+              path="screens"
+              element={
+                <RoleRoute allowedRoles={['ADMIN', 'OPERATOR']}>
+                  <Screens />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="queues"
+              element={
+                <RoleRoute allowedRoles={['ADMIN']}>
+                  <Queues />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="orders"
+              element={
+                <RoleRoute allowedRoles={['ADMIN', 'OPERATOR']}>
+                  <Orders />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="appearance"
+              element={
+                <RoleRoute allowedRoles={['ADMIN', 'OPERATOR']}>
+                  <Appearance />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <RoleRoute allowedRoles={['ADMIN']}>
+                  <Settings />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="users"
+              element={
+                <RoleRoute allowedRoles={['ADMIN']}>
+                  <Users />
+                </RoleRoute>
+              }
+            />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
