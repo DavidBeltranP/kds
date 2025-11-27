@@ -51,8 +51,11 @@ export function useKeyboardController() {
   );
 
   const handleTogglePower = useCallback(() => {
+    // Leer el estado ANTES de hacer toggle
+    const wasStandby = useScreenStore.getState().isStandby;
     toggleStandby();
-    const newStatus = useScreenStore.getState().isStandby ? 'ONLINE' : 'STANDBY';
+    // Si estaba en standby, ahora está online. Si estaba online, ahora está en standby.
+    const newStatus = wasStandby ? 'ONLINE' : 'STANDBY';
     socketService.updateStatus(newStatus);
     console.log('[Keyboard] Power toggled:', newStatus);
   }, [toggleStandby]);
@@ -61,6 +64,9 @@ export function useKeyboardController() {
     (progress: number) => {
       setComboProgress(progress);
       showCombo(progress > 0);
+      if (progress > 0) {
+        console.log(`[COMBO i+g] Progreso: ${progress.toFixed(0)}% - Vamos a apagar...`);
+      }
     },
     [setComboProgress, showCombo]
   );
@@ -142,16 +148,8 @@ export function useKeyboardController() {
         onProgress: handleComboProgress,
       }));
 
-    // Agregar combo por defecto para power si no existe
-    if (!combos.find((c) => c.action === 'togglePower')) {
-      combos.push({
-        keys: ['i', 'g'],
-        holdTime: 3000,
-        action: 'togglePower',
-        handler: handleTogglePower,
-        onProgress: handleComboProgress,
-      });
-    }
+    // El combo i+g ya viene de la configuración del servidor
+    // No agregamos combo por defecto - usamos el configurado en la BD
 
     // Crear controller
     controllerRef.current = new ButtonController(

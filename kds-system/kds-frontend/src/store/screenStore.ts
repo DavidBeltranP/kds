@@ -46,10 +46,12 @@ export const useScreenStore = create<ScreenState>((set) => ({
     })),
 
   setConnected: (isConnected) =>
-    set({
+    set((state) => ({
       isConnected,
-      status: isConnected ? 'ONLINE' : 'OFFLINE',
-    }),
+      // Solo cambiar a OFFLINE cuando se desconecta
+      // Cuando se conecta, NO cambiar el status - viene del servidor via config:update
+      status: !isConnected ? 'OFFLINE' : state.status,
+    })),
 
   updateHeartbeat: () =>
     set({ lastHeartbeat: new Date() }),

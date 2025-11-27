@@ -61,6 +61,15 @@ export function useWebSocket(screenId: string, apiKey: string) {
       console.log('[WS] Status confirmed:', data.status);
     });
 
+    // Escuchar cambios de estado desde backoffice
+    socket.on('screen:statusChanged', (data: { screenId: string; status: string }) => {
+      console.log('[WS] Screen status changed from backoffice:', data);
+      if (data.screenId === screenId) {
+        console.log('[WS] Applying status change:', data.status);
+        setStatus(data.status as 'ONLINE' | 'OFFLINE' | 'STANDBY');
+      }
+    });
+
     socket.on('error', (error: { message: string }) => {
       console.error('[WS] Error:', error.message);
       setError(error.message);

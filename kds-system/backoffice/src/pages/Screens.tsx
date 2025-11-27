@@ -27,6 +27,7 @@ import {
   KeyOutlined,
 } from '@ant-design/icons';
 import { screensApi, queuesApi } from '../services/api';
+import { io } from 'socket.io-client';
 
 interface Queue {
   id: string;
@@ -79,6 +80,30 @@ export function Screens() {
 
   useEffect(() => {
     loadData();
+
+    // Conectar WebSocket para recibir cambios de estado en tiempo real
+    const socket = io('http://localhost:3000', {
+      transports: ['websocket'],
+    });
+
+    socket.on('connect', () => {
+      console.log('[Backoffice] WebSocket conectado');
+      socket.emit('backoffice:join');
+    });
+
+    // Escuchar cambios de estado de pantallas
+    socket.on('screen:statusChanged', (data: { screenId: string; status: string }) => {
+      console.log('[Backoffice] Screen status changed:', data);
+      setScreens(prev => prev.map(screen =>
+        screen.id === data.screenId
+          ? { ...screen, status: data.status as Screen['status'] }
+          : screen
+      ));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   const loadData = async () => {

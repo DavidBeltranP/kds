@@ -17,10 +17,16 @@ export class ScreenService {
     // Guardar en Redis con TTL
     await redis.setex(REDIS_KEYS.screenAlive(screenId), ttl, 'true');
 
-    // Actualizar estado si estaba offline
-    const currentStatus = await this.getScreenStatus(screenId);
-    if (currentStatus === 'OFFLINE') {
+    // Obtener estado actual de BD (no de Redis, para tener el valor real)
+    const screen = await prisma.screen.findUnique({
+      where: { id: screenId },
+      select: { status: true },
+    });
+
+    // Solo actualizar a ONLINE si estaba OFFLINE (respetar STANDBY)
+    if (screen?.status === 'OFFLINE') {
       await this.updateScreenStatus(screenId, 'ONLINE');
+      screenLogger.info(`Screen ${screenId} came online from OFFLINE`);
     }
 
     // Registrar heartbeat en BD (para histórico)
@@ -65,6 +71,9 @@ export class ScreenService {
 
     // Guardar en Redis
     await redis.set(REDIS_KEYS.screenStatus(screenId), status);
+
+    // Invalidar caché de config para que al recargar obtenga el status nuevo
+    await redis.del(REDIS_KEYS.configCache(screenId));
 
     // Publicar cambio
     await redisPub.publish(

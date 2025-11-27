@@ -312,7 +312,14 @@ export const setStandby = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
+    console.log(`[SCREEN] Setting screen ${id} to STANDBY from backoffice`);
+
     await screenService.updateScreenStatus(id, 'STANDBY');
+
+    // Notificar directamente via WebSocket
+    websocketService.broadcastScreenStatus(id, 'STANDBY');
+
+    console.log(`[SCREEN] Screen ${id} set to STANDBY, WebSocket notified`);
 
     res.json({ message: 'Screen set to standby', status: 'STANDBY' });
   }
@@ -326,7 +333,14 @@ export const activateScreen = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
 
+    console.log(`[SCREEN] Activating screen ${id} from backoffice`);
+
     await screenService.updateScreenStatus(id, 'ONLINE');
+
+    // Notificar directamente via WebSocket
+    websocketService.broadcastScreenStatus(id, 'ONLINE');
+
+    console.log(`[SCREEN] Screen ${id} activated, WebSocket notified`);
 
     res.json({ message: 'Screen activated', status: 'ONLINE' });
   }
