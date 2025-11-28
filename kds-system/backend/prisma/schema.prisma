@@ -157,7 +157,7 @@ model Appearance {
   // Tema
   theme            String  @default("DARK") // DARK | LIGHT
   screenName       String  @default("")
-  screenSplit      Boolean @default(false)
+  screenSplit      Boolean @default(true)
   showCounters     Boolean @default(false)
 
   // Colores generales
@@ -248,6 +248,12 @@ model Preference {
   showPagination     Boolean @default(true)
   sourceBoxActive    Boolean @default(true)
   sourceBoxMessage   String  @default("KDS")
+
+  // Touch/Tactil
+  touchEnabled       Boolean @default(false)
+
+  // Botonera/Teclado - habilitada por defecto, se deshabilita automáticamente al activar touch
+  botoneraEnabled    Boolean @default(true)
 
   screen Screen @relation(fields: [screenId], references: [id], onDelete: Cascade)
 }

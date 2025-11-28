@@ -14,7 +14,7 @@ import {
   Space,
   Alert,
 } from 'antd';
-import { SaveOutlined, ReloadOutlined, EyeOutlined } from '@ant-design/icons';
+import { SaveOutlined, ReloadOutlined, UndoOutlined } from '@ant-design/icons';
 import { screensApi } from '../services/api';
 import { ScreenPreview } from '../components/ScreenPreview';
 import type { Color } from 'antd/es/color-picker';
@@ -48,13 +48,11 @@ interface AppearanceConfig {
   headerShowTime: boolean;
   // Disposicion
   columns: number;
-  rows: number;
   // Opciones
   showTimer: boolean;
   showOrderNumber: boolean;
   animationEnabled: boolean;
   screenSplit: boolean;
-  maxItemsPerColumn: number;
 }
 
 const fontFamilies = [
@@ -93,13 +91,11 @@ const defaultConfig: AppearanceConfig = {
   headerShowTime: true,
   // Disposicion
   columns: 4,
-  rows: 3,
   // Opciones
   showTimer: true,
   showOrderNumber: true,
   animationEnabled: true,
-  screenSplit: true,
-  maxItemsPerColumn: 6,
+  screenSplit: true, // Activado por defecto
 };
 
 export function Appearance() {
@@ -135,11 +131,50 @@ export function Appearance() {
     try {
       setLoading(true);
       const { data } = await screensApi.getConfig(screenId);
-      const appearance = data.appearance || defaultConfig;
-      setConfig(appearance);
-      form.setFieldsValue(appearance);
+      const appearance = data.appearance;
+
+      if (appearance) {
+        // Mapear campos del backend al formato del formulario
+        const mappedConfig: AppearanceConfig = {
+          // Colores generales
+          backgroundColor: appearance.backgroundColor || defaultConfig.backgroundColor,
+          headerColor: appearance.headerColor || defaultConfig.headerColor,
+          headerTextColor: appearance.headerTextColor || defaultConfig.headerTextColor,
+          cardColor: appearance.cardColor || defaultConfig.cardColor,
+          textColor: appearance.textColor || defaultConfig.textColor,
+          accentColor: appearance.accentColor || defaultConfig.accentColor,
+          // Tipografia de productos
+          productFontFamily: appearance.productFontFamily || defaultConfig.productFontFamily,
+          productFontSize: appearance.productFontSize || defaultConfig.productFontSize,
+          productFontWeight: appearance.productFontWeight || defaultConfig.productFontWeight,
+          // Tipografia de modificadores
+          modifierFontFamily: appearance.modifierFontFamily || defaultConfig.modifierFontFamily,
+          modifierFontSize: appearance.modifierFontSize || defaultConfig.modifierFontSize,
+          modifierFontColor: appearance.modifierFontColor || defaultConfig.modifierFontColor,
+          modifierFontStyle: appearance.modifierFontStyle || defaultConfig.modifierFontStyle,
+          // Cabecera de orden
+          headerFontFamily: appearance.headerFontFamily || defaultConfig.headerFontFamily,
+          headerFontSize: appearance.headerFontSize || defaultConfig.headerFontSize,
+          headerShowChannel: appearance.headerShowChannel ?? defaultConfig.headerShowChannel,
+          headerShowTime: appearance.headerShowTime ?? defaultConfig.headerShowTime,
+          // Disposicion - mapear columnsPerScreen a columns
+          columns: appearance.columnsPerScreen || defaultConfig.columns,
+          // Opciones
+          showTimer: appearance.showTimer ?? defaultConfig.showTimer,
+          showOrderNumber: appearance.showOrderNumber ?? defaultConfig.showOrderNumber,
+          animationEnabled: appearance.animationEnabled ?? defaultConfig.animationEnabled,
+          screenSplit: appearance.screenSplit ?? defaultConfig.screenSplit,
+        };
+
+        setConfig(mappedConfig);
+        form.setFieldsValue(mappedConfig);
+      } else {
+        setConfig(defaultConfig);
+        form.setFieldsValue(defaultConfig);
+      }
     } catch (error) {
       message.error('Error cargando configuracion');
+      setConfig(defaultConfig);
       form.setFieldsValue(defaultConfig);
     } finally {
       setLoading(false);
@@ -168,9 +203,10 @@ export function Appearance() {
     }
   };
 
-  const handlePreview = () => {
-    const screenName = screens.find(s => s.id === selectedScreenId)?.name;
-    message.info(`Vista previa disponible en la pantalla: ${screenName}`);
+  const handleResetDefaults = () => {
+    form.setFieldsValue(defaultConfig);
+    setConfig(defaultConfig);
+    message.info('Valores restaurados a configuración por defecto');
   };
 
   const handleFormChange = (_: any, allValues: AppearanceConfig) => {
@@ -207,8 +243,8 @@ export function Appearance() {
               <Button icon={<ReloadOutlined />} onClick={() => selectedScreenId && loadScreenConfig(selectedScreenId)}>
                 Recargar
               </Button>
-              <Button icon={<EyeOutlined />} onClick={handlePreview}>
-                Preview
+              <Button icon={<UndoOutlined />} onClick={handleResetDefaults}>
+                Por defecto
               </Button>
               <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
                 Guardar
@@ -285,6 +321,7 @@ export function Appearance() {
                     <Select.Option value="medium">Mediano (14px)</Select.Option>
                     <Select.Option value="large">Grande (16px)</Select.Option>
                     <Select.Option value="xlarge">Extra Grande (20px)</Select.Option>
+                    <Select.Option value="xxlarge">Muy Grande (24px)</Select.Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -329,6 +366,7 @@ export function Appearance() {
                     <Select.Option value="medium">Mediano (14px)</Select.Option>
                     <Select.Option value="large">Grande (16px)</Select.Option>
                     <Select.Option value="xlarge">Extra Grande (20px)</Select.Option>
+                    <Select.Option value="xxlarge">Muy Grande (24px)</Select.Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -365,6 +403,8 @@ export function Appearance() {
                     <Select.Option value="small">Pequeno (11px)</Select.Option>
                     <Select.Option value="medium">Mediano (12px)</Select.Option>
                     <Select.Option value="large">Grande (14px)</Select.Option>
+                    <Select.Option value="xlarge">Extra Grande (16px)</Select.Option>
+                    <Select.Option value="xxlarge">Muy Grande (18px)</Select.Option>
                   </Select>
                 </Form.Item>
               </Col>
@@ -394,15 +434,10 @@ export function Appearance() {
                   <InputNumber min={1} max={8} style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
-              <Col span={8}>
-                <Form.Item name="rows" label="Filas">
-                  <InputNumber min={1} max={6} style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
+              <Col span={16}>
                 <Alert
                   type="info"
-                  message={`Grid: ${config.columns}x${config.rows} = ${config.columns * config.rows} ordenes visibles`}
+                  message={`Se mostraran ${config.columns} ordenes por fila`}
                   style={{ height: '100%' }}
                 />
               </Col>
@@ -446,24 +481,15 @@ export function Appearance() {
                   name="screenSplit"
                   label="Dividir Ordenes Largas"
                   valuePropName="checked"
-                  tooltip="Cuando una orden tiene mas items de los que caben en una columna, se divide en columnas adyacentes"
+                  tooltip="Cuando una orden tiene mas items de los que caben en una columna, se divide automaticamente en columnas adyacentes"
                 >
                   <Switch />
                 </Form.Item>
               </Col>
-              <Col span={8}>
-                <Form.Item
-                  name="maxItemsPerColumn"
-                  label="Max Items por Columna"
-                  tooltip="Numero maximo de items que caben en una columna antes de dividir la orden"
-                >
-                  <InputNumber min={3} max={12} style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
+              <Col span={16}>
                 <Alert
                   type="info"
-                  message={config.screenSplit ? `Ordenes con mas de ${config.maxItemsPerColumn} items se dividen` : 'Division desactivada'}
+                  message={config.screenSplit ? 'Las ordenes largas se dividiran automaticamente' : 'Division desactivada'}
                   style={{ height: '100%' }}
                 />
               </Col>
@@ -498,7 +524,6 @@ export function Appearance() {
               columnsPerScreen: config.columns,
               screenName: screens.find(s => s.id === selectedScreenId)?.name || 'PREVIEW',
               screenSplit: config.screenSplit,
-              maxItemsPerColumn: config.maxItemsPerColumn,
               cardColors: [
                 { color: '#4CAF50', minutes: '01:00', order: 1, isFullBackground: false },
                 { color: '#FFC107', minutes: '02:00', order: 2, isFullBackground: false },

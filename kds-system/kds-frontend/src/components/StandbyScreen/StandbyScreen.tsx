@@ -1,10 +1,23 @@
 import { useEffect, useState } from 'react';
-import { useConfigStore, useScreenName } from '../../store/configStore';
+import { useConfigStore, useScreenName, usePreference } from '../../store/configStore';
+import { useScreenStore } from '../../store/screenStore';
+import { socketService } from '../../services/socket';
 
 export function StandbyScreen() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const screenName = useScreenName();
   const config = useConfigStore((state) => state.config);
+  const preference = usePreference();
+  const { toggleStandby } = useScreenStore();
+
+  const touchEnabled = preference?.touchEnabled ?? false;
+
+  const handleActivate = () => {
+    if (touchEnabled) {
+      toggleStandby();
+      socketService.updateStatus('ONLINE');
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -51,11 +64,20 @@ export function StandbyScreen() {
       </div>
 
       {/* Info */}
-      <div className="text-center space-y-2 text-gray-600">
+      <div className="text-center space-y-4 text-gray-600">
         <p className="text-lg">Pantalla en modo de espera</p>
-        <p className="text-sm">
-          Presione <span className="text-yellow-500 font-bold">↓+↑</span> para activar
-        </p>
+        {touchEnabled ? (
+          <button
+            onClick={handleActivate}
+            className="px-8 py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-bold text-xl rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            Tocar para Activar
+          </button>
+        ) : (
+          <p className="text-sm">
+            Presione <span className="text-yellow-500 font-bold">↓+↑</span> para activar
+          </p>
+        )}
       </div>
 
       {/* Screen info */}

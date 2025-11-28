@@ -38,7 +38,6 @@ interface ScreenAppearance {
   columnsPerScreen?: number;
   screenName?: string;
   screenSplit?: boolean;
-  maxItemsPerColumn?: number;
   cardColors?: Array<{
     color: string;
     minutes: string;
@@ -135,9 +134,9 @@ const defaultChannelColors: Record<string, string> = {
 
 const getFontSize = (size?: string, type: 'header' | 'product' | 'modifier' = 'product'): string => {
   const sizes: Record<string, Record<string, string>> = {
-    header: { small: '10px', medium: '11px', large: '12px', xlarge: '14px' },
-    product: { small: '10px', medium: '11px', large: '12px', xlarge: '14px' },
-    modifier: { xsmall: '8px', small: '9px', medium: '10px', large: '11px' },
+    header: { small: '10px', medium: '11px', large: '12px', xlarge: '14px', xxlarge: '16px' },
+    product: { small: '10px', medium: '11px', large: '12px', xlarge: '14px', xxlarge: '16px' },
+    modifier: { xsmall: '8px', small: '9px', medium: '10px', large: '11px', xlarge: '12px', xxlarge: '14px' },
   };
   return sizes[type][size || 'medium'] || sizes[type].medium;
 };
@@ -189,7 +188,6 @@ export function ScreenPreview({
     columnsPerScreen = 4,
     screenName = 'PREVIEW',
     screenSplit = true,
-    maxItemsPerColumn = 6,
     cardColors = [
       { color: '#4CAF50', minutes: '01:00', order: 1, isFullBackground: false },
       { color: '#FFC107', minutes: '02:00', order: 2, isFullBackground: false },
@@ -208,6 +206,18 @@ export function ScreenPreview({
   } = preference;
 
   const isDark = parseInt(backgroundColor?.replace('#', '') || 'ffffff', 16) < 0x808080;
+
+  // Calcular automáticamente maxItemsPerColumn basado en el tamaño de fuente
+  const autoMaxItems = useMemo(() => {
+    const fontSizeToItems: Record<string, number> = {
+      small: 10,
+      medium: 8,
+      large: 7,
+      xlarge: 6,
+      xxlarge: 5,
+    };
+    return fontSizeToItems[productFontSize] || 6;
+  }, [productFontSize]);
 
   const getTimeColor = (createdAt: Date): string => {
     const elapsed = (Date.now() - createdAt.getTime()) / 1000 / 60;
@@ -232,7 +242,7 @@ export function ScreenPreview({
     for (const order of orders) {
       if (columns.length >= columnsPerScreen) break;
 
-      const needsSplit = screenSplit && order.items.length > maxItemsPerColumn;
+      const needsSplit = screenSplit && order.items.length > autoMaxItems;
 
       if (!needsSplit) {
         columns.push({
@@ -244,11 +254,11 @@ export function ScreenPreview({
           isLastPart: true,
         });
       } else {
-        const totalParts = Math.ceil(order.items.length / maxItemsPerColumn);
+        const totalParts = Math.ceil(order.items.length / autoMaxItems);
         for (let i = 0; i < totalParts && columns.length < columnsPerScreen; i++) {
           columns.push({
             order,
-            items: order.items.slice(i * maxItemsPerColumn, (i + 1) * maxItemsPerColumn),
+            items: order.items.slice(i * autoMaxItems, (i + 1) * autoMaxItems),
             partNumber: i + 1,
             totalParts,
             isFirstPart: i === 0,
@@ -258,7 +268,7 @@ export function ScreenPreview({
       }
     }
     return columns;
-  }, [orders, screenSplit, columnsPerScreen, maxItemsPerColumn]);
+  }, [orders, screenSplit, columnsPerScreen, autoMaxItems]);
 
   const renderColumn = (column: ColumnCard, _idx: number) => {
     const { order, items, isFirstPart, isLastPart, totalParts } = column;

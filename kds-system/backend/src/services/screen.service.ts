@@ -220,6 +220,8 @@ export class ScreenService {
             showPagination: screen.preference.showPagination,
             sourceBoxActive: screen.preference.sourceBoxActive,
             sourceBoxMessage: screen.preference.sourceBoxMessage,
+            touchEnabled: screen.preference.touchEnabled,
+            botoneraEnabled: screen.preference.botoneraEnabled,
           }
         : null,
       keyboard: screen.keyboard

@@ -242,7 +242,7 @@ export const generateTestOrders = asyncHandler(
       throw new AppError(403, 'Not available in production');
     }
 
-    const { count = 10, includeLong = true } = req.body;
+    const { count = 10, includeLong = true, includeExtraLong = true } = req.body;
 
     // Obtener pantallas disponibles
     const screens = await prisma.screen.findMany({
@@ -253,34 +253,80 @@ export const generateTestOrders = asyncHandler(
       throw new AppError(400, 'No screens available');
     }
 
-    const channels = ['Local', 'Kiosko-Efectivo', 'PedidosYa', 'RAPPI', 'Drive', 'APP'];
+    const channels = ['Local', 'Kiosko-Efectivo', 'PedidosYa', 'RAPPI', 'Drive', 'APP', 'UberEats', 'Glovo'];
 
-    // Productos con modificadores complejos
+    // Productos con modificadores complejos - más variedad
     const products = [
       { name: 'Pollo Original 8pcs', base: 'pollo' },
       { name: 'Pollo Crispy 4pcs', base: 'pollo' },
+      { name: 'Pollo Picante 6pcs', base: 'pollo' },
+      { name: 'Pollo Extra Crispy 12pcs', base: 'pollo' },
       { name: 'Bucket 15 Presas', base: 'bucket' },
       { name: 'Bucket 21 Presas', base: 'bucket' },
+      { name: 'Bucket Familiar 30 Presas', base: 'bucket' },
+      { name: 'Mega Bucket 45 Presas', base: 'bucket' },
       { name: 'Big Box Familiar', base: 'combo' },
       { name: 'Mega Box', base: 'combo' },
+      { name: 'Box Individual', base: 'combo' },
+      { name: 'Duo Box', base: 'combo' },
+      { name: 'Triple Box', base: 'combo' },
+      { name: 'Super Combo Familiar', base: 'combo' },
       { name: 'Twister Clasico', base: 'sanduche' },
       { name: 'Twister Supreme', base: 'sanduche' },
+      { name: 'Twister Bacon', base: 'sanduche' },
       { name: 'Sanduche Supreme', base: 'sanduche' },
+      { name: 'Sanduche Doble', base: 'sanduche' },
       { name: 'Ruster Doble', base: 'sanduche' },
+      { name: 'Ruster Triple', base: 'sanduche' },
+      { name: 'Zinger Doble', base: 'sanduche' },
       { name: 'Papas Grandes', base: 'acomp' },
       { name: 'Papas Medianas', base: 'acomp' },
+      { name: 'Papas Familiar', base: 'acomp' },
+      { name: 'Papas con Queso', base: 'acomp' },
+      { name: 'Papas Bacon', base: 'acomp' },
       { name: 'Ensalada Coleslaw', base: 'acomp' },
+      { name: 'Ensalada Coleslaw Grande', base: 'acomp' },
       { name: 'Puré de Papa', base: 'acomp' },
+      { name: 'Puré de Papa Grande', base: 'acomp' },
+      { name: 'Arroz con Pollo', base: 'acomp' },
+      { name: 'Mazorca', base: 'acomp' },
       { name: 'Coca-Cola 500ml', base: 'bebida' },
+      { name: 'Coca-Cola 1L', base: 'bebida' },
+      { name: 'Coca-Cola 2L', base: 'bebida' },
+      { name: 'Sprite 500ml', base: 'bebida' },
+      { name: 'Fanta 500ml', base: 'bebida' },
       { name: 'Limonada Grande', base: 'bebida' },
+      { name: 'Limonada Familiar', base: 'bebida' },
+      { name: 'Jugo de Naranja', base: 'bebida' },
+      { name: 'Agua Mineral', base: 'bebida' },
       { name: 'Helado Vainilla', base: 'postre' },
+      { name: 'Helado Chocolate', base: 'postre' },
+      { name: 'Helado Mixto', base: 'postre' },
       { name: 'Sundae Chocolate', base: 'postre' },
+      { name: 'Sundae Fresa', base: 'postre' },
+      { name: 'Sundae Caramelo', base: 'postre' },
+      { name: 'Pie de Manzana', base: 'postre' },
+      { name: 'Brownie', base: 'postre' },
+      { name: 'Alitas BBQ x6', base: 'alitas' },
       { name: 'Alitas BBQ x12', base: 'alitas' },
+      { name: 'Alitas BBQ x24', base: 'alitas' },
+      { name: 'Alitas Picantes x12', base: 'alitas' },
+      { name: 'Alitas Mix x18', base: 'alitas' },
+      { name: 'Nuggets x10', base: 'nuggets' },
       { name: 'Nuggets x20', base: 'nuggets' },
+      { name: 'Nuggets x40', base: 'nuggets' },
+      { name: 'Strips x6', base: 'strips' },
+      { name: 'Strips x12', base: 'strips' },
+      { name: 'Strips x24', base: 'strips' },
     ];
 
     // Modificadores más variados y complejos
-    const simpleModifiers = ['Sin sal', 'Extra crispy', 'Con salsa BBQ', 'Sin cebolla', 'Sin mayonesa', 'Extra picante'];
+    const simpleModifiers = [
+      'Sin sal', 'Extra crispy', 'Con salsa BBQ', 'Sin cebolla', 'Sin mayonesa',
+      'Extra picante', 'Con salsa ranch', 'Sin lechuga', 'Extra queso',
+      'Sin tomate', 'Extra salsa', 'Con jalapeños', 'Sin pepinillos',
+      'Doble carne', 'Sin mostaza', 'Extra bacon', 'Con aguacate'
+    ];
 
     // Modificadores especiales para buckets (múltiples presas)
     const bucketModifiers = [
@@ -289,9 +335,15 @@ export const generateTestOrders = asyncHandler(
       '12 en Crispy, 3 en Original',
       '5 en Original, 5 en Crispy, 5 en Picante',
       '7 en Original, 7 en Crispy, 7 en Picante',
-      '15 en Crispy',
+      '15 en Crispy, 6 en Original, 9 en Picante',
+      '20 en Crispy, 10 en Picante',
+      '15 en Original, 15 en Crispy',
+      '10 en Original, 10 en Crispy, 10 en Picante',
       '21 en Original',
       '10 en Picante, 11 en Original',
+      '15 en Extra Crispy',
+      '8 Original, 8 Crispy, 8 Picante, 6 BBQ',
+      '12 Muslos Original, 12 Pechugas Crispy, 6 Alitas',
     ];
 
     const comboModifiers = [
@@ -299,11 +351,78 @@ export const generateTestOrders = asyncHandler(
       'Bebida: Sprite, Acomp: Ensalada',
       'Sin ensalada, Bebida grande',
       'Acomp: Puré de Papa, Extra salsa',
+      'Bebida: Limonada, Acomp: Arroz',
+      'Con postre: Sundae Chocolate',
+      'Cambio acomp: Mazorca por Papas',
+      'Bebida: 2 Coca-Cola 500ml, Acomp: Papas Familiar',
+      'Extra pollo, Sin acompañamiento',
+      'Todo sin sal, Bebida sin hielo',
     ];
 
     const createdOrders = [];
 
-    // Plantillas de órdenes largas predefinidas
+    // Plantillas de órdenes extra largas (evento, fiesta, catering)
+    const extraLongOrderTemplates = [
+      {
+        // Pedido para fiesta grande
+        items: [
+          { name: 'Mega Bucket 45 Presas', quantity: 2, modifier: '20 Original, 15 Crispy, 10 Picante por bucket' },
+          { name: 'Bucket Familiar 30 Presas', quantity: 3, modifier: '15 Original, 15 Crispy por bucket' },
+          { name: 'Alitas BBQ x24', quantity: 4, modifier: '2 con salsa BBQ, 2 con salsa picante' },
+          { name: 'Alitas Mix x18', quantity: 3, modifier: '6 BBQ, 6 Picante, 6 Ranch' },
+          { name: 'Nuggets x40', quantity: 3, modifier: 'Con 6 salsas variadas' },
+          { name: 'Strips x24', quantity: 2, modifier: 'Extra crispy, con salsa miel mostaza' },
+          { name: 'Papas Familiar', quantity: 8, modifier: 'Sin sal' },
+          { name: 'Papas con Queso', quantity: 4, modifier: 'Extra queso' },
+          { name: 'Ensalada Coleslaw Grande', quantity: 6, modifier: null },
+          { name: 'Puré de Papa Grande', quantity: 4, modifier: null },
+          { name: 'Coca-Cola 2L', quantity: 6, modifier: null },
+          { name: 'Limonada Familiar', quantity: 4, modifier: 'Sin azúcar' },
+          { name: 'Sundae Chocolate', quantity: 8, modifier: 'Extra chocolate' },
+          { name: 'Sundae Fresa', quantity: 6, modifier: null },
+          { name: 'Pie de Manzana', quantity: 10, modifier: 'Con helado' },
+        ]
+      },
+      {
+        // Pedido corporativo
+        items: [
+          { name: 'Bucket 21 Presas', quantity: 5, modifier: '10 Crispy, 6 Original, 5 Picante' },
+          { name: 'Big Box Familiar', quantity: 8, modifier: 'Bebida: Coca-Cola, Acomp: Papas Grandes' },
+          { name: 'Mega Box', quantity: 6, modifier: 'Sin ensalada, Bebida grande, Extra pollo' },
+          { name: 'Twister Supreme', quantity: 12, modifier: '4 sin cebolla, 4 extra picante, 4 normal' },
+          { name: 'Zinger Doble', quantity: 8, modifier: 'Extra mayonesa' },
+          { name: 'Papas Grandes', quantity: 15, modifier: null },
+          { name: 'Ensalada Coleslaw', quantity: 10, modifier: null },
+          { name: 'Coca-Cola 1L', quantity: 10, modifier: null },
+          { name: 'Sprite 500ml', quantity: 8, modifier: null },
+          { name: 'Agua Mineral', quantity: 12, modifier: null },
+          { name: 'Brownie', quantity: 15, modifier: 'Con helado de vainilla' },
+        ]
+      },
+      {
+        // Pedido restaurante/evento
+        items: [
+          { name: 'Pollo Original 8pcs', quantity: 10, modifier: 'Bien cocido' },
+          { name: 'Pollo Crispy 4pcs', quantity: 15, modifier: 'Extra crispy' },
+          { name: 'Pollo Picante 6pcs', quantity: 8, modifier: 'Muy picante' },
+          { name: 'Bucket 15 Presas', quantity: 4, modifier: '8 Original, 7 Crispy' },
+          { name: 'Alitas BBQ x12', quantity: 6, modifier: '3 BBQ, 3 Picante' },
+          { name: 'Nuggets x20', quantity: 5, modifier: 'Con salsas variadas' },
+          { name: 'Strips x12', quantity: 4, modifier: 'Con salsa ranch' },
+          { name: 'Sanduche Doble', quantity: 8, modifier: 'Sin cebolla, extra mayonesa' },
+          { name: 'Ruster Triple', quantity: 6, modifier: 'Extra bacon, extra queso' },
+          { name: 'Papas Familiar', quantity: 6, modifier: 'Sin sal' },
+          { name: 'Papas Bacon', quantity: 4, modifier: 'Extra bacon' },
+          { name: 'Arroz con Pollo', quantity: 8, modifier: null },
+          { name: 'Mazorca', quantity: 10, modifier: 'Con mantequilla' },
+          { name: 'Coca-Cola 2L', quantity: 4, modifier: null },
+          { name: 'Limonada Grande', quantity: 8, modifier: null },
+          { name: 'Helado Mixto', quantity: 10, modifier: null },
+        ]
+      },
+    ];
+
+    // Plantillas de órdenes largas normales
     const longOrderTemplates = [
       {
         items: [
@@ -349,6 +468,28 @@ export const generateTestOrders = asyncHandler(
           { name: 'Helado Vainilla', quantity: 4, modifier: null },
         ]
       },
+      {
+        items: [
+          { name: 'Triple Box', quantity: 2, modifier: 'Bebida: Sprite, Extra salsa BBQ' },
+          { name: 'Duo Box', quantity: 3, modifier: 'Acomp: Puré de Papa' },
+          { name: 'Alitas Picantes x12', quantity: 2, modifier: 'Extra picante, con salsa ranch' },
+          { name: 'Strips x12', quantity: 2, modifier: 'Con miel mostaza' },
+          { name: 'Papas con Queso', quantity: 3, modifier: 'Extra queso' },
+          { name: 'Coca-Cola 1L', quantity: 2, modifier: null },
+          { name: 'Sundae Caramelo', quantity: 4, modifier: 'Extra caramelo' },
+        ]
+      },
+      {
+        items: [
+          { name: 'Super Combo Familiar', quantity: 2, modifier: 'Todo crispy, Bebida: Limonada Familiar' },
+          { name: 'Zinger Doble', quantity: 4, modifier: '2 sin cebolla, 2 extra picante' },
+          { name: 'Twister Bacon', quantity: 3, modifier: 'Extra bacon' },
+          { name: 'Papas Familiar', quantity: 2, modifier: null },
+          { name: 'Ensalada Coleslaw Grande', quantity: 2, modifier: null },
+          { name: 'Jugo de Naranja', quantity: 4, modifier: null },
+          { name: 'Brownie', quantity: 4, modifier: 'Con helado' },
+        ]
+      },
     ];
 
     for (let i = 0; i < count; i++) {
@@ -357,33 +498,39 @@ export const generateTestOrders = asyncHandler(
 
       let items: Array<{ name: string; quantity: number; modifier: string | null }> = [];
 
-      // 30% de probabilidad de orden larga si includeLong está activo
-      const isLongOrder = includeLong && Math.random() < 0.3;
+      // Determinar tipo de orden
+      const random = Math.random();
+      const isExtraLongOrder = includeExtraLong && random < 0.15; // 15% extra largas
+      const isLongOrder = includeLong && !isExtraLongOrder && random < 0.45; // 30% largas
 
-      if (isLongOrder) {
+      if (isExtraLongOrder) {
+        // Usar plantilla de orden extra larga (fiesta/evento)
+        const template = extraLongOrderTemplates[Math.floor(Math.random() * extraLongOrderTemplates.length)];
+        items = [...template.items];
+      } else if (isLongOrder) {
         // Usar una plantilla de orden larga
         const template = longOrderTemplates[Math.floor(Math.random() * longOrderTemplates.length)];
         items = [...template.items];
       } else {
-        // Generar orden normal
-        const numItems = Math.floor(Math.random() * 5) + 2; // 2-6 items
+        // Generar orden normal con más variación
+        const numItems = Math.floor(Math.random() * 6) + 2; // 2-7 items
 
         for (let j = 0; j < numItems; j++) {
           const product = products[Math.floor(Math.random() * products.length)];
           let modifier: string | null = null;
 
-          // Asignar modificador según tipo de producto
+          // Asignar modificador según tipo de producto (70% probabilidad de tener modificador)
           if (product.base === 'bucket') {
-            modifier = Math.random() > 0.3 ? bucketModifiers[Math.floor(Math.random() * bucketModifiers.length)] : null;
+            modifier = Math.random() > 0.2 ? bucketModifiers[Math.floor(Math.random() * bucketModifiers.length)] : null;
           } else if (product.base === 'combo') {
-            modifier = Math.random() > 0.5 ? comboModifiers[Math.floor(Math.random() * comboModifiers.length)] : null;
+            modifier = Math.random() > 0.3 ? comboModifiers[Math.floor(Math.random() * comboModifiers.length)] : null;
           } else {
-            modifier = Math.random() > 0.5 ? simpleModifiers[Math.floor(Math.random() * simpleModifiers.length)] : null;
+            modifier = Math.random() > 0.4 ? simpleModifiers[Math.floor(Math.random() * simpleModifiers.length)] : null;
           }
 
           items.push({
             name: product.name,
-            quantity: Math.floor(Math.random() * 3) + 1,
+            quantity: Math.floor(Math.random() * 4) + 1, // 1-4 cantidad
             modifier,
           });
         }
@@ -413,9 +560,17 @@ export const generateTestOrders = asyncHandler(
       createdOrders.push(order);
     }
 
+    const extraLongCount = createdOrders.filter(o => o.items.length > 10).length;
+    const longCount = createdOrders.filter(o => o.items.length >= 6 && o.items.length <= 10).length;
+
     res.json({
-      message: `Created ${createdOrders.length} test orders (${includeLong ? 'including long orders' : 'short orders only'})`,
-      orders: createdOrders.length
+      message: `Created ${createdOrders.length} test orders`,
+      details: {
+        total: createdOrders.length,
+        extraLong: extraLongCount,
+        long: longCount,
+        normal: createdOrders.length - extraLongCount - longCount
+      }
     });
   }
 );

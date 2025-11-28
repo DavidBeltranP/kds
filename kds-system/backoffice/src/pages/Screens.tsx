@@ -143,7 +143,11 @@ export function Screens() {
       const { data } = await screensApi.getConfig(screen.id);
       setSelectedScreen(data);
       appearanceForm.setFieldsValue(data.appearance);
-      keyboardForm.setFieldsValue(data.keyboardConfig);
+      // Cargar keyboardConfig y agregar touchEnabled desde preference
+      keyboardForm.setFieldsValue({
+        ...data.keyboardConfig,
+        touchEnabled: data.preference?.touchEnabled ?? false,
+      });
       setConfigModalOpen(true);
     } catch (error) {
       message.error('Error cargando configuracion');
@@ -219,8 +223,15 @@ export function Screens() {
     if (!selectedScreen) return;
     try {
       const values = await keyboardForm.validateFields();
-      await screensApi.updateKeyboard(selectedScreen.id, values);
-      message.success('Configuracion de teclado guardada');
+      const { touchEnabled, ...keyboardValues } = values;
+
+      // Guardar configuración de teclado
+      await screensApi.updateKeyboard(selectedScreen.id, keyboardValues);
+
+      // Guardar touchEnabled en preferencias
+      await screensApi.updatePreference(selectedScreen.id, { touchEnabled });
+
+      message.success('Configuracion guardada');
     } catch (error) {
       message.error('Error guardando configuracion');
     }
@@ -444,36 +455,56 @@ export function Screens() {
             },
             {
               key: 'keyboard',
-              label: 'Teclado/Botonera',
+              label: 'Entrada',
               children: (
                 <Form form={keyboardForm} layout="vertical">
-                  <Form.Item name="enabled" label="Habilitado" valuePropName="checked">
-                    <Switch />
-                  </Form.Item>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <Form.Item name="finishKey" label="Tecla Finalizar">
-                      <Input placeholder="1" maxLength={1} />
-                    </Form.Item>
-                    <Form.Item name="nextPageKey" label="Tecla Pagina Siguiente">
-                      <Input placeholder="3" maxLength={1} />
-                    </Form.Item>
-                    <Form.Item name="prevPageKey" label="Tecla Pagina Anterior">
-                      <Input placeholder="h" maxLength={1} />
-                    </Form.Item>
-                    <Form.Item name="standbyHoldTime" label="Tiempo Standby (ms)">
-                      <InputNumber min={1000} max={10000} step={500} />
-                    </Form.Item>
-                  </div>
-                  <Form.Item name="standbyCombo" label="Combo Standby (teclas separadas por coma)">
-                    <Input placeholder="i,g" />
-                  </Form.Item>
                   <Descriptions column={1} style={{ marginBottom: 16 }}>
-                    <Descriptions.Item label="Botonera Fisica">
-                      El combo standby (por defecto i+g) activa/desactiva el modo standby
-                      cuando se mantiene presionado por el tiempo configurado.
+                    <Descriptions.Item label="Metodos de Entrada">
+                      Configure como los operadores interactuan con la pantalla:
+                      via botonera fisica o pantalla tactil.
                     </Descriptions.Item>
                   </Descriptions>
-                  <Button type="primary" onClick={handleSaveKeyboard}>
+
+                  <Card size="small" title="Pantalla Tactil" style={{ marginBottom: 16 }}>
+                    <Form.Item
+                      name="touchEnabled"
+                      label="Habilitar Touch"
+                      valuePropName="checked"
+                      tooltip="Permite finalizar ordenes tocando la tarjeta en pantalla"
+                    >
+                      <Switch />
+                    </Form.Item>
+                  </Card>
+
+                  <Card size="small" title="Botonera Fisica">
+                    <Form.Item name="enabled" label="Habilitado" valuePropName="checked">
+                      <Switch />
+                    </Form.Item>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <Form.Item name="finishKey" label="Tecla Finalizar">
+                        <Input placeholder="1" maxLength={1} />
+                      </Form.Item>
+                      <Form.Item name="nextPageKey" label="Tecla Pagina Siguiente">
+                        <Input placeholder="3" maxLength={1} />
+                      </Form.Item>
+                      <Form.Item name="prevPageKey" label="Tecla Pagina Anterior">
+                        <Input placeholder="h" maxLength={1} />
+                      </Form.Item>
+                      <Form.Item name="standbyHoldTime" label="Tiempo Standby (ms)">
+                        <InputNumber min={1000} max={10000} step={500} />
+                      </Form.Item>
+                    </div>
+                    <Form.Item name="standbyCombo" label="Combo Standby (teclas separadas por coma)">
+                      <Input placeholder="i,g" />
+                    </Form.Item>
+                    <Descriptions column={1} size="small">
+                      <Descriptions.Item label="Nota">
+                        El combo standby (por defecto i+g) activa/desactiva el modo standby.
+                      </Descriptions.Item>
+                    </Descriptions>
+                  </Card>
+
+                  <Button type="primary" onClick={handleSaveKeyboard} style={{ marginTop: 16 }}>
                     Guardar Configuracion
                   </Button>
                 </Form>

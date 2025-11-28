@@ -91,7 +91,7 @@ function App() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="h-screen flex flex-col overflow-hidden"
       style={{
         backgroundColor,
         color: textColor,

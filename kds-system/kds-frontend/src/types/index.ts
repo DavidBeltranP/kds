@@ -120,6 +120,8 @@ export interface PreferenceConfig {
   showPagination: boolean;
   sourceBoxActive: boolean;
   sourceBoxMessage: string;
+  // Touch/Tactil
+  touchEnabled: boolean;
 }
 
 // ============================================

@@ -13,7 +13,7 @@ export function useKeyboardController() {
   const ordersPerPage = config?.appearance?.columnsPerScreen || 4;
   const currentOrders = useCurrentPageOrders(ordersPerPage);
 
-  const { setPage, setLastFinished } = useOrderStore();
+  const { setPage } = useOrderStore();
   const { isStandby, toggleStandby, setComboProgress, showCombo } =
     useScreenStore();
 
@@ -25,22 +25,10 @@ export function useKeyboardController() {
       if (order) {
         console.log(`[Keyboard] Finishing order at index ${index}:`, order.id);
         socketService.finishOrder(order.id);
-        setLastFinished(order.id);
       }
     },
-    [currentOrders, isStandby, setLastFinished]
+    [currentOrders, isStandby]
   );
-
-  const handleUndo = useCallback(() => {
-    if (isStandby) return;
-
-    const lastFinished = useOrderStore.getState().lastFinishedOrderId;
-    if (lastFinished) {
-      console.log('[Keyboard] Undo order:', lastFinished);
-      socketService.undoOrder(lastFinished);
-      setLastFinished(null);
-    }
-  }, [isStandby, setLastFinished]);
 
   const handleNavigation = useCallback(
     (direction: 'next' | 'prev' | 'first' | 'last') => {
@@ -123,11 +111,6 @@ export function useKeyboardController() {
         action: 'lastPage',
         handler: () => handleNavigation('last'),
       },
-      {
-        key: keyboard.undo,
-        action: 'undo',
-        handler: handleUndo,
-      },
     ].filter((a) => a.key);
 
     // Crear combos - presionar g + i (↓ + ↑) casi simultáneamente
@@ -159,7 +142,6 @@ export function useKeyboardController() {
     keyboard,
     handleFinishOrder,
     handleNavigation,
-    handleUndo,
     handleTogglePower,
     handleComboProgress,
   ]);

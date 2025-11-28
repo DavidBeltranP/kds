@@ -305,6 +305,45 @@ export const updateKeyboard = asyncHandler(
 );
 
 /**
+ * PUT /api/screens/:id/preference
+ * Actualizar preferencias de pantalla
+ *
+ * Lógica de touch/botonera:
+ * - Cuando touchEnabled se activa (true), botoneraEnabled se desactiva (false)
+ * - Cuando touchEnabled se desactiva (false), botoneraEnabled se activa (true)
+ */
+export const updatePreference = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const data = { ...req.body };
+
+    // Lógica automática: touch y botonera son mutuamente excluyentes
+    if (typeof data.touchEnabled === 'boolean') {
+      // Si se está cambiando touchEnabled, invertir botoneraEnabled
+      data.botoneraEnabled = !data.touchEnabled;
+    } else if (typeof data.botoneraEnabled === 'boolean') {
+      // Si se está cambiando botoneraEnabled, invertir touchEnabled
+      data.touchEnabled = !data.botoneraEnabled;
+    }
+
+    const preference = await prisma.preference.upsert({
+      where: { screenId: id },
+      create: {
+        screenId: id,
+        ...data,
+      },
+      update: data,
+    });
+
+    // Invalidar cache y notificar al frontend
+    await screenService.invalidateConfigCache(id);
+    await websocketService.broadcastConfigUpdate(id);
+
+    res.json(preference);
+  }
+);
+
+/**
  * POST /api/screens/:id/standby
  * Poner pantalla en standby
  */
@@ -365,3 +404,4 @@ export const regenerateApiKey = asyncHandler(
     res.json({ apiKey: screen.apiKey });
   }
 );
+

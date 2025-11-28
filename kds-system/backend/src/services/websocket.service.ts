@@ -5,6 +5,7 @@ import { wsLogger } from '../utils/logger';
 import { screenService } from './screen.service';
 import { orderService } from './order.service';
 import { balancerService } from './balancer.service';
+import { printerService } from './printer.service';
 import {
   WsScreenRegister,
   WsHeartbeat,
@@ -228,6 +229,17 @@ export class WebSocketService {
 
       if (order) {
         socket.emit('order:finished', { orderId: data.orderId });
+
+        // Imprimir la orden en la impresora asignada a la pantalla
+        const printerConfig = await printerService.getPrinterForScreen(data.screenId);
+        if (printerConfig && printerConfig.enabled) {
+          const printed = await printerService.printOrder(order, printerConfig);
+          if (printed) {
+            wsLogger.info(`Order ${order.identifier} printed successfully`);
+          } else {
+            wsLogger.warn(`Failed to print order ${order.identifier}`);
+          }
+        }
 
         // Actualizar órdenes de la pantalla
         const orders = await balancerService.getOrdersForScreen(data.screenId);

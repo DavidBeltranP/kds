@@ -31,6 +31,9 @@ interface OrderCardProps {
   showTimer?: boolean;
   showOrderNumber?: boolean;
   headerFontSize?: string;
+  // Touch/Click handler
+  onFinish?: (orderId: string) => void;
+  touchEnabled?: boolean;
 }
 
 // Colores por defecto de canales
@@ -46,9 +49,9 @@ const defaultChannelColors: Record<string, string> = {
 
 const getFontSize = (size?: string, type: 'header' | 'product' | 'modifier' = 'product'): string => {
   const sizes: Record<string, Record<string, string>> = {
-    header: { small: '12px', medium: '14px', large: '16px', xlarge: '18px' },
-    product: { small: '12px', medium: '14px', large: '16px', xlarge: '18px' },
-    modifier: { xsmall: '10px', small: '11px', medium: '12px', large: '14px' },
+    header: { small: '12px', medium: '14px', large: '16px', xlarge: '20px', xxlarge: '24px' },
+    product: { small: '12px', medium: '14px', large: '16px', xlarge: '20px', xxlarge: '24px' },
+    modifier: { xsmall: '10px', small: '11px', medium: '12px', large: '14px', xlarge: '16px', xxlarge: '18px' },
   };
   return sizes[type][size || 'medium'] || sizes[type].medium;
 };
@@ -58,13 +61,17 @@ const getFontWeight = (weight?: string): number => {
   return weights[weight || 'bold'] || 700;
 };
 
-// Clip-path para efecto de papel rasgado en el borde inferior
+// Clip-path para efecto de papel rasgado en el borde inferior (primera parte)
 const getClipPathBottom = () =>
   'polygon(0% 0%, 100% 0%, 100% calc(100% - 10px), 97% calc(100% - 6px), 94% calc(100% - 9px), 91% calc(100% - 4px), 88% calc(100% - 8px), 85% calc(100% - 5px), 82% calc(100% - 10px), 79% calc(100% - 6px), 76% calc(100% - 8px), 73% calc(100% - 3px), 70% calc(100% - 7px), 67% calc(100% - 5px), 64% calc(100% - 9px), 61% calc(100% - 6px), 58% calc(100% - 8px), 55% calc(100% - 4px), 52% calc(100% - 9px), 49% calc(100% - 5px), 46% calc(100% - 10px), 43% calc(100% - 6px), 40% calc(100% - 8px), 37% calc(100% - 3px), 34% calc(100% - 7px), 31% calc(100% - 5px), 28% calc(100% - 9px), 25% calc(100% - 6px), 22% calc(100% - 8px), 19% calc(100% - 4px), 16% calc(100% - 8px), 13% calc(100% - 5px), 10% calc(100% - 10px), 7% calc(100% - 6px), 4% calc(100% - 8px), 0% calc(100% - 5px))';
 
-// Clip-path para efecto de papel rasgado en el borde superior
+// Clip-path para efecto de papel rasgado en el borde superior (última parte)
 const getClipPathTop = () =>
   'polygon(0% 10px, 3% 6px, 6% 9px, 9% 4px, 12% 8px, 15% 5px, 18% 10px, 21% 6px, 24% 8px, 27% 3px, 30% 7px, 33% 5px, 36% 9px, 39% 6px, 42% 4px, 45% 8px, 48% 5px, 51% 9px, 54% 6px, 57% 10px, 60% 4px, 63% 7px, 66% 5px, 69% 8px, 72% 3px, 75% 6px, 78% 9px, 81% 5px, 84% 8px, 87% 4px, 90% 7px, 93% 6px, 96% 9px, 100% 5px, 100% 100%, 0% 100%)';
+
+// Clip-path para efecto de papel rasgado en ambos bordes (partes intermedias)
+const getClipPathBoth = () =>
+  'polygon(0% 10px, 3% 6px, 6% 9px, 9% 4px, 12% 8px, 15% 5px, 18% 10px, 21% 6px, 24% 8px, 27% 3px, 30% 7px, 33% 5px, 36% 9px, 39% 6px, 42% 4px, 45% 8px, 48% 5px, 51% 9px, 54% 6px, 57% 10px, 60% 4px, 63% 7px, 66% 5px, 69% 8px, 72% 3px, 75% 6px, 78% 9px, 81% 5px, 84% 8px, 87% 4px, 90% 7px, 93% 6px, 96% 9px, 100% 5px, 100% calc(100% - 10px), 97% calc(100% - 6px), 94% calc(100% - 9px), 91% calc(100% - 4px), 88% calc(100% - 8px), 85% calc(100% - 5px), 82% calc(100% - 10px), 79% calc(100% - 6px), 76% calc(100% - 8px), 73% calc(100% - 3px), 70% calc(100% - 7px), 67% calc(100% - 5px), 64% calc(100% - 9px), 61% calc(100% - 6px), 58% calc(100% - 8px), 55% calc(100% - 4px), 52% calc(100% - 9px), 49% calc(100% - 5px), 46% calc(100% - 10px), 43% calc(100% - 6px), 40% calc(100% - 8px), 37% calc(100% - 3px), 34% calc(100% - 7px), 31% calc(100% - 5px), 28% calc(100% - 9px), 25% calc(100% - 6px), 22% calc(100% - 8px), 19% calc(100% - 4px), 16% calc(100% - 8px), 13% calc(100% - 5px), 10% calc(100% - 10px), 7% calc(100% - 6px), 4% calc(100% - 8px), 0% calc(100% - 5px))';
 
 export function OrderCard({
   order,
@@ -91,6 +98,8 @@ export function OrderCard({
   showTimer = true,
   showOrderNumber = true,
   headerFontSize = 'medium',
+  onFinish,
+  touchEnabled = false,
 }: OrderCardProps) {
   const [elapsedTime, setElapsedTime] = useState(getElapsedTime(order.createdAt));
   const [timeColor, setTimeColor] = useState(() =>
@@ -125,7 +134,16 @@ export function OrderCard({
     if (!isSplit) return undefined;
     if (isFirstPart && !isLastPart) return getClipPathBottom();
     if (isLastPart && !isFirstPart) return getClipPathTop();
+    // Partes intermedias (ni primera ni última) - rasgado en ambos bordes
+    if (!isFirstPart && !isLastPart) return getClipPathBoth();
     return undefined;
+  };
+
+  // Handler para touch/click - solo en la primera parte de la orden
+  const handleClick = () => {
+    if (touchEnabled && onFinish && isFirstPart) {
+      onFinish(order.id);
+    }
   };
 
   return (
@@ -134,6 +152,14 @@ export function OrderCard({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        cursor: touchEnabled && isFirstPart ? 'pointer' : 'default',
+      }}
+      onClick={handleClick}
+      onTouchEnd={(e) => {
+        if (touchEnabled && isFirstPart) {
+          e.preventDefault();
+          handleClick();
+        }
       }}
     >
       <div
@@ -262,7 +288,7 @@ export function OrderCard({
           </>
         )}
 
-        {/* Items - sin scroll */}
+        {/* Items - sin scroll, se divide la orden si no cabe */}
         <div
           style={{
             flex: 1,

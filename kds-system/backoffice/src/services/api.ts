@@ -74,6 +74,8 @@ export const screensApi = {
   setStandby: (id: string) => api.post(`/screens/${id}/standby`),
   activate: (id: string) => api.post(`/screens/${id}/activate`),
   regenerateKey: (id: string) => api.post(`/screens/${id}/regenerate-key`),
+  updatePreference: (id: string, data: any) =>
+    api.put(`/screens/${id}/preference`, data),
 };
 
 // Queues

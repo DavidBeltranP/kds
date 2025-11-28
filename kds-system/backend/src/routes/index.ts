@@ -76,6 +76,12 @@ router.put(
   authorize('ADMIN', 'OPERATOR'),
   screenController.updateKeyboard
 );
+router.put(
+  '/screens/:id/preference',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  screenController.updatePreference
+);
 
 // Screen status
 router.post(
