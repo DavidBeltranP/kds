@@ -1,6 +1,21 @@
 import { useAppearance, usePreference, useKeyboard } from '../../store/configStore';
 import { usePagination } from '../../store/orderStore';
 
+// Mapeo de teclas internas a símbolos visuales de la botonera
+const keyToVisual: Record<string, string> = {
+  'h': '1',
+  '3': '2',
+  '1': '3',
+  'f': '4',
+  'j': '5',
+  'g': '↓',
+  'i': '↑',
+};
+
+function getVisualKey(key: string): string {
+  return keyToVisual[key.toLowerCase()] || key.toUpperCase();
+}
+
 export function Footer() {
   const appearance = useAppearance();
   const preference = usePreference();
@@ -14,9 +29,9 @@ export function Footer() {
   const headerTextColor = appearance?.headerTextColor || '#ffffff';
   const accentColor = appearance?.accentColor || '#e94560';
 
-  // Teclas de navegación
-  const prevKey = keyboard?.previousPage || 'G';
-  const nextKey = keyboard?.nextPage || 'I';
+  // Teclas de navegación (convertidas a visual)
+  const prevKey = getVisualKey(keyboard?.previousPage || 'g');
+  const nextKey = getVisualKey(keyboard?.nextPage || 'i');
 
   const buttonStyle = {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -47,23 +62,8 @@ export function Footer() {
         height: appearance?.footerHeight || '72px',
       }}
     >
-      {/* Left - Source Box */}
-      {preference?.sourceBoxActive && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span
-            style={{
-              backgroundColor: accentColor,
-              color: '#ffffff',
-              padding: '4px 12px',
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              fontSize: '0.875rem',
-            }}
-          >
-            {preference.sourceBoxMessage || 'KDS'}
-          </span>
-        </div>
-      )}
+      {/* Left - Spacer */}
+      <div></div>
 
       {/* Center - Pagination */}
       {showPagination && totalPages > 1 && (
@@ -79,7 +79,7 @@ export function Footer() {
               cursor: 'pointer',
             }}
           >
-            <span style={buttonStyle}>{prevKey.toUpperCase()}</span>
+            <span style={buttonStyle}>{prevKey}</span>
             <span style={{ fontSize: '0.875rem', color: headerTextColor }}>Anterior</span>
           </button>
 
@@ -109,7 +109,7 @@ export function Footer() {
             }}
           >
             <span style={{ fontSize: '0.875rem', color: headerTextColor }}>Siguiente</span>
-            <span style={buttonStyle}>{nextKey.toUpperCase()}</span>
+            <span style={buttonStyle}>{nextKey}</span>
           </button>
         </div>
       )}
@@ -117,23 +117,23 @@ export function Footer() {
       {/* Right - Keyboard hints */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <span style={hintStyle}>
-          <span style={buttonStyle}>H</span>
+          <span style={buttonStyle}>1</span>
           1ra
         </span>
         <span style={hintStyle}>
-          <span style={buttonStyle}>3</span>
+          <span style={buttonStyle}>2</span>
           2da
         </span>
         <span style={hintStyle}>
-          <span style={buttonStyle}>1</span>
+          <span style={buttonStyle}>3</span>
           3ra
         </span>
         <span style={hintStyle}>
-          <span style={buttonStyle}>F</span>
+          <span style={buttonStyle}>4</span>
           4ta
         </span>
         <span style={{ ...hintStyle, color: '#facc15' }}>
-          <span style={{ ...buttonStyle, color: '#facc15' }}>I+G</span>
+          <span style={{ ...buttonStyle, color: '#facc15' }}>↓+↑</span>
           Power
         </span>
       </div>

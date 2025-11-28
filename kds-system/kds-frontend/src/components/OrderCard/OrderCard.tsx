@@ -115,7 +115,8 @@ export function OrderCard({
     )?.color || defaultChannelColors[channelKey] || '#4a90e2';
 
   // Tecla para finalizar (solo en primera parte)
-  const finishKey = isFirstPart ? (['H', '3', '1', 'F', 'J'][index] || '') : '';
+  // Mostramos los equivalentes visuales de la botonera (1, 2, 3, 4, 5)
+  const finishKey = isFirstPart ? (['1', '2', '3', '4', '5'][index] || '') : '';
 
   const isSplit = totalParts > 1;
 

@@ -64,9 +64,6 @@ export function useKeyboardController() {
     (progress: number) => {
       setComboProgress(progress);
       showCombo(progress > 0);
-      if (progress > 0) {
-        console.log(`[COMBO i+g] Progreso: ${progress.toFixed(0)}% - Vamos a apagar...`);
-      }
     },
     [setComboProgress, showCombo]
   );
@@ -133,23 +130,17 @@ export function useKeyboardController() {
       },
     ].filter((a) => a.key);
 
-    // Crear combos
-    const combos = (keyboard.combos || [])
-      .filter((c) => c.enabled)
-      .map((combo) => ({
-        keys: combo.keys,
-        holdTime: combo.holdTime,
-        action: combo.action,
-        handler: () => {
-          if (combo.action === 'togglePower') {
-            handleTogglePower();
-          }
-        },
+    // Crear combos - presionar g + i (↓ + ↑) casi simultáneamente
+    // La botonera envía las teclas en secuencia con delay, aumentamos la ventana
+    const combos = [
+      {
+        keys: ['g', 'i'], // ↓ + ↑
+        timeWindow: 1500, // Las dos teclas deben llegar en 1.5 segundos
+        action: 'togglePower',
+        handler: handleTogglePower,
         onProgress: handleComboProgress,
-      }));
-
-    // El combo i+g ya viene de la configuración del servidor
-    // No agregamos combo por defecto - usamos el configurado en la BD
+      },
+    ];
 
     // Crear controller
     controllerRef.current = new ButtonController(

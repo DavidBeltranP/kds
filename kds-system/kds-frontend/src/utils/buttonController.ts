@@ -6,25 +6,26 @@ export interface ButtonAction {
 
 export interface ComboAction {
   keys: string[];
-  holdTime: number;
+  timeWindow: number; // Ventana de tiempo para detectar las teclas en secuencia
   action: string;
   handler: () => void;
   onProgress?: (progress: number) => void;
 }
 
 export class ButtonController {
-  private pressedKeys: Set<string> = new Set();
-  private keyTimestamps: Map<string, number> = new Map();
   private lastActionTime: number = 0;
   private debounceTime: number;
   private actions: ButtonAction[];
   private combos: ComboAction[];
   private onLog: (message: string) => void;
 
-  // Para secuencia de teclas (botonera que envía pulsos instantáneos)
+  // Para secuencia de teclas (combo)
   private keySequence: { key: string; time: number }[] = [];
-  private sequenceWindow: number = 500; // Ventana de 500ms para detectar secuencia
-  private sequenceComboExecuted: boolean = false;
+  private comboExecuted: boolean = false;
+
+  // Para evitar que teclas de combo ejecuten acciones simples
+  private pendingComboCheck: NodeJS.Timeout | null = null;
+  private comboCheckDelay: number = 800; // Esperar 800ms para ver si llega otra tecla del combo
 
   constructor(
     actions: ButtonAction[],
@@ -41,10 +42,7 @@ export class ButtonController {
 
   private setupListeners(): void {
     this.handleKeyDown = this.handleKeyDown.bind(this);
-    this.handleKeyUp = this.handleKeyUp.bind(this);
-
     document.addEventListener('keydown', this.handleKeyDown);
-    document.addEventListener('keyup', this.handleKeyUp);
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
@@ -54,119 +52,98 @@ export class ButtonController {
     // Prevenir comportamiento por defecto
     event.preventDefault();
 
-    // Si ya ejecutamos un combo recientemente, ignorar TODOS los keydowns
-    if (this.sequenceComboExecuted) {
+    // Si ya ejecutamos un combo recientemente, ignorar
+    if (this.comboExecuted) {
       return;
     }
 
-    // Limpiar teclas antiguas de la secuencia ANTES de agregar la nueva
-    this.keySequence = this.keySequence.filter(k => now - k.time < this.sequenceWindow);
-
-    // Agregar a la secuencia de teclas (siempre, aunque sea repetida)
-    // Esto permite detectar secuencias rápidas de la botonera
+    // Agregar a la secuencia
     this.keySequence.push({ key, time: now });
 
-    // Actualizar el set de teclas presionadas
-    this.pressedKeys.add(key);
-    this.keyTimestamps.set(key, now);
+    // Limpiar teclas antiguas (más de 2 segundos)
+    this.keySequence = this.keySequence.filter(k => now - k.time < 2000);
 
-    // Verificar combos por secuencia
-    this.checkSequenceCombos();
-  }
+    // Verificar si esta tecla es parte de algún combo
+    const isPartOfCombo = this.combos.some(c => c.keys.includes(key));
 
-  private handleKeyUp(event: KeyboardEvent): void {
-    const key = event.key.toLowerCase();
+    if (isPartOfCombo) {
+      // Cancelar check pendiente anterior
+      if (this.pendingComboCheck) {
+        clearTimeout(this.pendingComboCheck);
+      }
 
-    event.preventDefault();
+      // Verificar combo inmediatamente
+      if (this.checkAndExecuteCombo()) {
+        return; // Combo ejecutado, no hacer nada más
+      }
 
-    // Si ya ejecutamos un combo recientemente, ignorar TODO
-    if (this.sequenceComboExecuted) {
-      this.pressedKeys.delete(key);
-      this.keyTimestamps.delete(key);
-      return;
+      // Si no se completó el combo, esperar un poco por si llega otra tecla
+      this.pendingComboCheck = setTimeout(() => {
+        this.pendingComboCheck = null;
+
+        // Verificar de nuevo por si llegó otra tecla
+        if (this.checkAndExecuteCombo()) {
+          return;
+        }
+
+        // No se completó combo, limpiar secuencia
+        this.keySequence = [];
+      }, this.comboCheckDelay);
+
+      return; // No ejecutar acción simple aún
     }
 
-    // Si la tecla no estaba en nuestro registro, ignorar (evento fantasma)
-    if (!this.pressedKeys.has(key)) {
-      return;
-    }
-
-    this.pressedKeys.delete(key);
-    this.keyTimestamps.delete(key);
-
+    // Tecla que NO es parte de combo - ejecutar inmediatamente
     // Debounce
-    const now = Date.now();
     if (now - this.lastActionTime < this.debounceTime) {
       return;
     }
 
-    // Si esta tecla es parte de un combo, esperar un poco antes de ejecutar
-    // para dar tiempo a que llegue la otra tecla del combo
-    const isPartOfCombo = this.combos.some(c => c.keys.includes(key));
-    if (isPartOfCombo) {
-      // Guardar referencia al tiempo actual para verificar si se ejecutó combo
-      const timeBeforeWait = this.lastActionTime;
-      // Esperar 100ms para ver si se detecta un combo
-      setTimeout(() => {
-        // Si durante la espera se ejecutó un combo (lastActionTime cambió), no hacer nada
-        if (this.sequenceComboExecuted || this.lastActionTime !== timeBeforeWait) {
-          return;
-        }
-        // Si no se detectó combo, ejecutar la acción simple
-        this.executeSimpleAction(key);
-      }, 100);
-    } else {
-      // Tecla que no es parte de combo, ejecutar inmediatamente
-      this.executeSimpleAction(key);
-    }
+    this.executeSimpleAction(key);
   }
 
-  /**
-   * Verifica combos basado en secuencia de teclas (para botonera con pulsos instantáneos)
-   * Detecta si todas las teclas del combo fueron presionadas dentro de la ventana de tiempo
-   */
-  private checkSequenceCombos(): void {
-    // Si ya ejecutamos un combo y está en cooldown, no verificar
-    if (this.sequenceComboExecuted) {
-      return;
-    }
-
+  private checkAndExecuteCombo(): boolean {
     const now = Date.now();
-    const recentKeys = this.keySequence.filter(k => now - k.time < this.sequenceWindow);
-    const recentKeyNames = recentKeys.map(k => k.key);
 
     for (const combo of this.combos) {
-      // Verificar si todas las teclas del combo están en la secuencia reciente
-      const allKeysInSequence = combo.keys.every(k => recentKeyNames.includes(k));
+      // Obtener teclas recientes dentro de la ventana del combo
+      const recentKeys = this.keySequence.filter(k => now - k.time < combo.timeWindow);
+      const recentKeyNames = recentKeys.map(k => k.key);
 
-      if (allKeysInSequence) {
-        // IMPORTANTE: Marcar como ejecutado INMEDIATAMENTE para bloquear más detecciones
-        this.sequenceComboExecuted = true;
+      // Verificar si todas las teclas del combo están presentes
+      const allKeysPresent = combo.keys.every(k => recentKeyNames.includes(k));
 
-        // Mostrar progreso visual
+      if (allKeysPresent) {
+        this.comboExecuted = true;
+
         if (combo.onProgress) {
           combo.onProgress(100);
         }
 
-        // Ejecutar el combo
-        this.executeCombo(combo);
+        // Ejecutar handler del combo
+        combo.handler();
+        this.lastActionTime = now;
 
-        // Limpiar la secuencia
+        // Limpiar
         this.keySequence = [];
+        if (this.pendingComboCheck) {
+          clearTimeout(this.pendingComboCheck);
+          this.pendingComboCheck = null;
+        }
 
-        // Resetear después de 2 segundos para permitir nuevos combos
+        // Resetear después de 1 segundo (para poder encender/apagar rápido)
         setTimeout(() => {
-          this.sequenceComboExecuted = false;
-          this.pressedKeys.clear();
-          this.keyTimestamps.clear();
+          this.comboExecuted = false;
           if (combo.onProgress) {
             combo.onProgress(0);
           }
-        }, 2000);
+        }, 1000);
 
-        return;
+        return true;
       }
     }
+
+    return false;
   }
 
   private executeSimpleAction(key: string): void {
@@ -175,11 +152,6 @@ export class ButtonController {
       this.lastActionTime = Date.now();
       action.handler();
     }
-  }
-
-  private executeCombo(combo: ComboAction): void {
-    this.lastActionTime = Date.now();
-    combo.handler();
   }
 
   public updateActions(actions: ButtonAction[]): void {
@@ -192,8 +164,12 @@ export class ButtonController {
 
   public destroy(): void {
     document.removeEventListener('keydown', this.handleKeyDown);
-    document.removeEventListener('keyup', this.handleKeyUp);
+
+    if (this.pendingComboCheck) {
+      clearTimeout(this.pendingComboCheck);
+    }
+
     this.keySequence = [];
-    this.sequenceComboExecuted = false;
+    this.comboExecuted = false;
   }
 }

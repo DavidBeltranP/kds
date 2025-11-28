@@ -54,8 +54,7 @@ export function StandbyScreen() {
       <div className="text-center space-y-2 text-gray-600">
         <p className="text-lg">Pantalla en modo de espera</p>
         <p className="text-sm">
-          Presione <span className="text-yellow-500 font-bold">I + G</span> por 3
-          segundos para activar
+          Presione <span className="text-yellow-500 font-bold">↓+↑</span> para activar
         </p>
       </div>
 
