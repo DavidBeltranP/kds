@@ -14,6 +14,7 @@ interface OrderState {
   restoreOrder: (order: Order) => void;
   setPage: (page: number | 'next' | 'prev' | 'first' | 'last') => void;
   calculatePages: (ordersPerPage: number) => void;
+  setTotalPages: (pages: number) => void;
   setLastFinished: (orderId: string | null) => void;
 }
 
@@ -82,6 +83,9 @@ export const useOrderStore = create<OrderState>((set) => ({
     set((state) => ({
       totalPages: Math.max(1, Math.ceil(state.orders.length / ordersPerPage)),
     })),
+
+  setTotalPages: (pages) =>
+    set({ totalPages: pages }),
 
   setLastFinished: (orderId) =>
     set({ lastFinishedOrderId: orderId }),

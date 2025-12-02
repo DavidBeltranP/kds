@@ -288,12 +288,13 @@ export function OrderCard({
           </>
         )}
 
-        {/* Items - sin scroll, se divide la orden si no cabe */}
+        {/* Items - con scroll como fallback si el contenido excede */}
         <div
           style={{
             flex: 1,
             padding: '10px 12px',
-            overflow: 'hidden',
+            overflowY: 'auto',
+            overflowX: 'hidden',
             minHeight: 0,
           }}
         >

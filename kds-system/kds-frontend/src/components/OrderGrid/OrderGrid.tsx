@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useCallback, useRef, useState } from 'react';
 import { OrderCard } from '../OrderCard';
-import { useOrderStore, useCurrentPageOrders } from '../../store/orderStore';
+import { useOrderStore } from '../../store/orderStore';
 import { useAppearance, usePreference } from '../../store/configStore';
 import { socketService } from '../../services/socket';
 import type { Order, OrderItem } from '../../types';
@@ -20,7 +20,6 @@ export function OrderGrid() {
   const preference = usePreference();
   const columnsPerScreen = appearance?.columnsPerScreen || 4;
   const screenSplit = appearance?.screenSplit ?? true;
-  const maxItemsPerColumn = appearance?.maxItemsPerColumn || 6;
   const touchEnabled = preference?.touchEnabled ?? false;
 
   // Obtener la altura del footer desde appearance o usar default
@@ -69,53 +68,84 @@ export function OrderGrid() {
   // Altura final a usar (medida real o calculada por el hook)
   const availableHeight = measuredHeight || screenDimensions.availableHeight;
 
-  // Mapeo de tamaños de fuente a alturas de item estimadas
-  const fontSizeToItemHeight: Record<string, number> = {
-    small: 45,    // 12px font
-    medium: 55,   // 14px font
-    large: 65,    // 16px font
-    xlarge: 80,   // 20px font
-    xxlarge: 95,  // 24px font
+  // Mapeo preciso de tamaños de fuente a PÍXELES reales
+  const productFontSizes: Record<string, number> = {
+    small: 12, medium: 14, large: 16, xlarge: 20, xxlarge: 24,
+  };
+  const modifierFontSizes: Record<string, number> = {
+    xsmall: 10, small: 11, medium: 12, large: 14, xlarge: 16, xxlarge: 18,
   };
 
-  // Obtener tamaño de fuente configurado
+  // Obtener tamaños de fuente configurados
   const productFontSize = appearance?.productFontSize || 'medium';
+  const modifierFontSize = appearance?.modifierFontSize || 'small';
 
-  // Calcular dinámicamente cuántos items caben basándose en la altura disponible REAL
-  // Y el tamaño de fuente configurado
-  const orderHeaderHeight = 120;
-  const avgItemHeight = fontSizeToItemHeight[productFontSize] || 55;
-  const gridPadding = 32;
-  const splitFooterHeight = 45;
-  const safetyMargin = 25;
+  // Calcular altura REAL de un item producto base
+  // padding: 4px arriba + 4px abajo = 8px
+  // lineHeight: 1.3
+  // Agregamos un 15% extra para gaps y spacing adicional
+  const productLineHeight = 1.3;
+  const productPadding = 8; // 4px arriba + 4px abajo
+  const itemProductHeight = Math.ceil(
+    (productFontSizes[productFontSize] || 14) * productLineHeight + productPadding * 1.15
+  );
+
+  // Calcular altura REAL de una línea de modificador
+  // marginTop: 2px
+  // lineHeight: 1.4
+  // Agregamos un 10% extra para gaps
+  const modifierLineHeight = 1.4;
+  const modifierMarginTop = 2;
+  const itemModifierLineHeight = Math.ceil(
+    ((modifierFontSizes[modifierFontSize] || 11) * modifierLineHeight + modifierMarginTop) * 1.10
+  );
+
+  console.log('[OrderGrid] Calculated item heights:', {
+    productFontSize,
+    modifierFontSize,
+    itemProductHeight,
+    itemModifierLineHeight,
+  });
+
+  // Constantes de diseño
+  const orderHeaderHeight = 120; // Header completo con orden, cliente, canal
+  const gridPadding = 32; // Padding del grid container (16px * 2)
+  const itemsContainerPadding = 20; // padding: '10px 12px' = 20px vertical
+  const splitFooterHeight = 50; // Footer "Final" en splits
+  const safetyMargin = 60; // Margen de seguridad optimizado para mejor uso del espacio
+  const otherPartsSafetyMargin = 80; // Margen ligeramente mayor para partes no-first (para footer)
 
   // Altura efectiva para items en primera parte (tiene header)
-  const firstPartItemsHeight = availableHeight - gridPadding - orderHeaderHeight - safetyMargin;
+  const firstPartItemsHeight =
+    availableHeight - gridPadding - orderHeaderHeight - itemsContainerPadding - safetyMargin;
+
   // Altura efectiva para items en otras partes (sin header, con footer opcional)
-  const otherPartsItemsHeight = availableHeight - gridPadding - splitFooterHeight - safetyMargin;
+  // Usamos margen de seguridad mayor para asegurar que el footer no se corte
+  const otherPartsItemsHeight =
+    availableHeight - gridPadding - splitFooterHeight - itemsContainerPadding - otherPartsSafetyMargin;
 
-  // Calcular peso máximo basado en altura real disponible
-  // Ser conservador para evitar cortes
-  const dynamicFirstPartMaxWeight = Math.max(3, Math.floor(firstPartItemsHeight / avgItemHeight));
-  const dynamicOtherPartsMaxWeight = Math.max(4, Math.floor(otherPartsItemsHeight / avgItemHeight));
+  // Calcular cuántos items caben basado en altura REAL en píxeles
+  // Usamos altura promedio conservadora (item base + algunas líneas de modificador)
+  const avgItemWithModifiers = itemProductHeight + (itemModifierLineHeight * 2); // Item + 2 líneas mod promedio
 
-  console.log('[OrderGrid] Dynamic weights:', {
+  const dynamicFirstPartMaxHeight = Math.max(itemProductHeight * 2, firstPartItemsHeight);
+  const dynamicOtherPartsMaxHeight = Math.max(itemProductHeight * 3, otherPartsItemsHeight);
+
+  console.log('[OrderGrid] Dynamic heights:', {
     availableHeight,
     firstPartItemsHeight,
     otherPartsItemsHeight,
-    dynamicFirstPartMaxWeight,
-    dynamicOtherPartsMaxWeight,
-    configMaxItems: maxItemsPerColumn,
+    dynamicFirstPartMaxHeight,
+    dynamicOtherPartsMaxHeight,
+    itemProductHeight,
+    itemModifierLineHeight,
+    avgItemWithModifiers,
   });
 
-  // Usar la misma cantidad para paginación y obtención de órdenes
-  const currentOrders = useCurrentPageOrders(columnsPerScreen);
-  const { calculatePages, setLastFinished } = useOrderStore();
-
-  // Recalcular páginas cuando cambian las órdenes o columnas
-  useEffect(() => {
-    calculatePages(columnsPerScreen);
-  }, [columnsPerScreen, calculatePages, useOrderStore.getState().orders.length]);
+  // Obtener TODAS las órdenes pendientes (no paginar aquí)
+  const allOrders = useOrderStore((state) => state.orders);
+  const currentPage = useOrderStore((state) => state.currentPage);
+  const { setLastFinished } = useOrderStore();
 
   // Handler para finalizar orden via touch/click
   const handleFinishOrder = useCallback((orderId: string) => {
@@ -124,57 +154,66 @@ export function OrderGrid() {
     setLastFinished(orderId);
   }, [setLastFinished]);
 
-  // Calcular el "peso" de un item (considerando modificadores)
-  const calculateItemWeight = (item: OrderItem): number => {
-    // Cada item base cuenta como 1
-    // Items con modificadores ocupan más espacio vertical
-    let weight = 1;
+  // Calcular la altura REAL en píxeles de un item (considerando modificadores y notas)
+  const calculateItemHeight = (item: OrderItem): number => {
+    // Altura base del producto
+    let height = itemProductHeight;
+
+    // Altura de modificadores (cada línea)
     if (item.modifier) {
       const modifierLines = item.modifier.split(',').length;
-      // Cada línea de modificador suma 0.5 para contabilizar el espacio extra
-      weight += modifierLines * 0.5;
+      height += modifierLines * itemModifierLineHeight;
     }
+
+    // Altura de notas (una línea adicional)
     if (item.notes) {
-      weight += 0.4;
+      height += itemModifierLineHeight;
     }
-    return weight;
+
+    return height;
   };
 
-  // Calcular cuántos items caben dado un peso máximo
-  const getItemsForWeight = (items: OrderItem[], maxWeight: number, startIndex: number = 0): OrderItem[] => {
+  // Calcular cuántos items caben dada una altura máxima en píxeles
+  const getItemsForHeight = (
+    items: OrderItem[],
+    maxHeight: number,
+    startIndex: number = 0
+  ): OrderItem[] => {
     const result: OrderItem[] = [];
-    let currentWeight = 0;
+    let currentHeight = 0;
 
     for (let i = startIndex; i < items.length; i++) {
-      const itemWeight = calculateItemWeight(items[i]);
-      if (currentWeight + itemWeight > maxWeight && result.length > 0) {
+      const itemHeight = calculateItemHeight(items[i]);
+
+      // Si agregar este item excede la altura Y ya tenemos al menos un item, cortar aquí
+      if (currentHeight + itemHeight > maxHeight && result.length > 0) {
         break;
       }
+
       result.push(items[i]);
-      currentWeight += itemWeight;
+      currentHeight += itemHeight;
     }
 
     return result;
   };
 
-  // Calcular columnas con split de órdenes largas
-  const displayColumns = useMemo((): ColumnCard[] => {
+  // Calcular TODAS las columnas (con split de órdenes largas)
+  const allColumns = useMemo((): ColumnCard[] => {
     const columns: ColumnCard[] = [];
 
-    for (const order of currentOrders) {
-      if (columns.length >= columnsPerScreen) break;
+    for (const order of allOrders) {
 
-      // Calcular peso total de la orden
-      const totalWeight = order.items.reduce((sum, item) => sum + calculateItemWeight(item), 0);
+      // Calcular altura total de la orden en píxeles
+      const totalHeight = order.items.reduce((sum, item) => sum + calculateItemHeight(item), 0);
 
-      // Usar pesos dinámicos calculados basándose en la altura disponible real
-      // Sin límites artificiales - usar todo el espacio disponible
-      const firstPartMaxWeight = dynamicFirstPartMaxWeight;
-      const otherPartsMaxWeight = dynamicOtherPartsMaxWeight;
+      // Usar alturas dinámicas calculadas basándose en la altura disponible real
+      const firstPartMaxHeight = dynamicFirstPartMaxHeight;
+      const otherPartsMaxHeight = dynamicOtherPartsMaxHeight;
 
-      const needsSplit = screenSplit && totalWeight > firstPartMaxWeight;
+      const needsSplit = screenSplit && totalHeight > firstPartMaxHeight;
 
       if (!needsSplit) {
+        // La orden completa cabe en una sola tarjeta
         columns.push({
           order,
           items: order.items,
@@ -184,21 +223,28 @@ export function OrderGrid() {
           isLastPart: true,
         });
       } else {
-        // Dividir la orden en partes basándose en peso
+        // Dividir la orden en partes basándose en altura real en píxeles
         const parts: OrderItem[][] = [];
         let remainingItems = [...order.items];
         let isFirst = true;
 
         while (remainingItems.length > 0) {
-          const maxWeight = isFirst ? firstPartMaxWeight : otherPartsMaxWeight;
-          const partItems = getItemsForWeight(remainingItems, maxWeight);
+          const maxHeight = isFirst ? firstPartMaxHeight : otherPartsMaxHeight;
+          const partItems = getItemsForHeight(remainingItems, maxHeight);
+
+          // Evitar partes vacías
+          if (partItems.length === 0 && remainingItems.length > 0) {
+            // Si no cabe ni un item, forzar al menos uno
+            partItems.push(remainingItems[0]);
+          }
+
           parts.push(partItems);
           remainingItems = remainingItems.slice(partItems.length);
           isFirst = false;
         }
 
-        // Agregar las partes como columnas
-        for (let i = 0; i < parts.length && columns.length < columnsPerScreen; i++) {
+        // Agregar TODAS las partes (la paginación se maneja después)
+        for (let i = 0; i < parts.length; i++) {
           columns.push({
             order,
             items: parts[i],
@@ -210,9 +256,49 @@ export function OrderGrid() {
         }
       }
     }
+
     return columns;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentOrders, screenSplit, columnsPerScreen, maxItemsPerColumn, dynamicFirstPartMaxWeight, dynamicOtherPartsMaxWeight, productFontSize]);
+  }, [
+    allOrders,
+    screenSplit,
+    dynamicFirstPartMaxHeight,
+    dynamicOtherPartsMaxHeight,
+    productFontSize,
+    modifierFontSize,
+    itemProductHeight,
+    itemModifierLineHeight,
+  ]);
+
+  // Paginar columnas de manera simple: SIEMPRE llenar todas las columnas por página
+  // Las órdenes PUEDEN dividirse entre páginas - la continuidad visual ya existe
+  const displayColumns = useMemo((): ColumnCard[] => {
+    const startIndex = (currentPage - 1) * columnsPerScreen;
+    const endIndex = startIndex + columnsPerScreen;
+    return allColumns.slice(startIndex, endIndex);
+  }, [allColumns, currentPage, columnsPerScreen]);
+
+  // Calcular total de páginas basándose en columnas totales
+  const totalPages = Math.max(1, Math.ceil(allColumns.length / columnsPerScreen));
+  const totalPendingOrders = allOrders.length;
+
+  console.log('[OrderGrid] Simple pagination:', {
+    totalPages,
+    currentPage,
+    totalColumns: allColumns.length,
+    columnsPerScreen,
+    displayingColumns: displayColumns.length,
+    startIndex: (currentPage - 1) * columnsPerScreen,
+    endIndex: (currentPage - 1) * columnsPerScreen + columnsPerScreen,
+  });
+
+  // Actualizar totalPages en el store basándose en columnas
+  useEffect(() => {
+    const { setTotalPages } = useOrderStore.getState();
+    if (setTotalPages) {
+      setTotalPages(totalPages);
+    }
+  }, [totalPages]);
 
   // Log de debugging para ver las dimensiones
   useEffect(() => {
@@ -222,7 +308,14 @@ export function OrderGrid() {
       diagonalInches: screenDimensions.diagonalInches.toFixed(1),
       screenCategory: screenDimensions.screenCategory,
     });
-  }, [screenDimensions, availableHeight]);
+    console.log('[OrderGrid] Pagination:', {
+      allColumnsCount: allColumns.length,
+      displayColumnsCount: displayColumns.length,
+      currentPage,
+      totalPages,
+      totalPendingOrders,
+    });
+  }, [screenDimensions, availableHeight, allColumns.length, displayColumns.length, currentPage, totalPages, totalPendingOrders]);
 
   if (displayColumns.length === 0) {
     return (
