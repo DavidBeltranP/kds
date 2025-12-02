@@ -25,6 +25,7 @@ import {
   DesktopOutlined,
   PoweroffOutlined,
   KeyOutlined,
+  PrinterOutlined,
 } from '@ant-design/icons';
 import { screensApi, queuesApi } from '../services/api';
 import { io } from 'socket.io-client';
@@ -43,6 +44,12 @@ interface Screen {
   status: 'ONLINE' | 'OFFLINE' | 'STANDBY';
   apiKey: string;
   lastHeartbeat: string | null;
+  printer: {
+    name: string;
+    ip: string;
+    port: number;
+    enabled: boolean;
+  } | null;
   appearance: {
     backgroundColor: string;
     headerColor: string;
@@ -72,11 +79,15 @@ export function Screens() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [printerModalOpen, setPrinterModalOpen] = useState(false);
   const [editingScreen, setEditingScreen] = useState<Screen | null>(null);
   const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
+  const [selectedPrinterScreen, setSelectedPrinterScreen] = useState<Screen | null>(null);
+  const [testingPrinter, setTestingPrinter] = useState(false);
   const [form] = Form.useForm();
   const [appearanceForm] = Form.useForm();
   const [keyboardForm] = Form.useForm();
+  const [printerForm] = Form.useForm();
 
   useEffect(() => {
     loadData();
@@ -237,6 +248,60 @@ export function Screens() {
     }
   };
 
+  const handleOpenPrinterModal = (screen: Screen) => {
+    setSelectedPrinterScreen(screen);
+    if (screen.printer) {
+      printerForm.setFieldsValue({
+        name: screen.printer.name,
+        ip: screen.printer.ip,
+        port: screen.printer.port,
+        enabled: screen.printer.enabled,
+      });
+    } else {
+      printerForm.resetFields();
+      printerForm.setFieldsValue({ enabled: true, port: 9100 });
+    }
+    setPrinterModalOpen(true);
+  };
+
+  const handleSavePrinter = async () => {
+    if (!selectedPrinterScreen) return;
+    try {
+      const values = await printerForm.validateFields();
+      await screensApi.updatePrinter(selectedPrinterScreen.id, values);
+      message.success('Impresora configurada correctamente');
+      setPrinterModalOpen(false);
+      loadData();
+    } catch (error) {
+      message.error('Error configurando impresora');
+    }
+  };
+
+  const handleDeletePrinter = async () => {
+    if (!selectedPrinterScreen) return;
+    try {
+      await screensApi.deletePrinter(selectedPrinterScreen.id);
+      message.success('Impresora eliminada');
+      setPrinterModalOpen(false);
+      loadData();
+    } catch (error) {
+      message.error('Error eliminando impresora');
+    }
+  };
+
+  const handleTestPrinter = async () => {
+    if (!selectedPrinterScreen) return;
+    setTestingPrinter(true);
+    try {
+      await screensApi.testPrinter(selectedPrinterScreen.id);
+      message.success('Conexión exitosa con la impresora');
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'Error probando conexión');
+    } finally {
+      setTestingPrinter(false);
+    }
+  };
+
   const getStatusTag = (status: string) => {
     const colors: Record<string, string> = {
       ONLINE: 'green',
@@ -268,6 +333,32 @@ export function Screens() {
       render: (status: string) => getStatusTag(status),
     },
     {
+      title: 'Impresora',
+      dataIndex: 'printer',
+      key: 'printer',
+      render: (printer: Screen['printer']) => {
+        if (!printer) {
+          return <Tag color="default">Sin impresora</Tag>;
+        }
+        return (
+          <Space direction="vertical" size={0}>
+            <Space>
+              <PrinterOutlined />
+              <span>{printer.name}</span>
+              {printer.enabled ? (
+                <Tag color="green">Activa</Tag>
+              ) : (
+                <Tag color="red">Deshabilitada</Tag>
+              )}
+            </Space>
+            <span style={{ fontSize: '12px', color: '#888' }}>
+              {printer.ip}:{printer.port}
+            </span>
+          </Space>
+        );
+      },
+    },
+    {
       title: 'Ultimo Heartbeat',
       dataIndex: 'lastHeartbeat',
       key: 'lastHeartbeat',
@@ -290,6 +381,13 @@ export function Screens() {
             onClick={() => handleConfigure(record)}
           >
             Configurar
+          </Button>
+          <Button
+            icon={<PrinterOutlined />}
+            size="small"
+            onClick={() => handleOpenPrinterModal(record)}
+          >
+            Impresora
           </Button>
           <Button
             icon={<PoweroffOutlined />}
@@ -535,6 +633,94 @@ export function Screens() {
             },
           ]}
         />
+      </Modal>
+
+      {/* Modal de configuración de impresora */}
+      <Modal
+        title={
+          <Space>
+            <PrinterOutlined />
+            {selectedPrinterScreen?.printer ? 'Editar Impresora' : 'Configurar Impresora'}
+          </Space>
+        }
+        open={printerModalOpen}
+        onCancel={() => setPrinterModalOpen(false)}
+        width={600}
+        footer={[
+          <Button key="cancel" onClick={() => setPrinterModalOpen(false)}>
+            Cancelar
+          </Button>,
+          selectedPrinterScreen?.printer && (
+            <Popconfirm
+              key="delete"
+              title="¿Eliminar configuración de impresora?"
+              onConfirm={handleDeletePrinter}
+            >
+              <Button danger>Eliminar</Button>
+            </Popconfirm>
+          ),
+          <Button
+            key="test"
+            onClick={handleTestPrinter}
+            loading={testingPrinter}
+            disabled={!selectedPrinterScreen?.printer}
+          >
+            Probar Conexión
+          </Button>,
+          <Button key="save" type="primary" onClick={handleSavePrinter}>
+            Guardar
+          </Button>,
+        ]}
+      >
+        <Form form={printerForm} layout="vertical">
+          <Form.Item
+            name="name"
+            label="Nombre de la Impresora"
+            rules={[{ required: true, message: 'Ingrese el nombre de la impresora' }]}
+          >
+            <Input placeholder="Ej: Impresora Cocina 1" />
+          </Form.Item>
+
+          <Form.Item
+            name="ip"
+            label="Dirección IP"
+            rules={[
+              { required: true, message: 'Ingrese la dirección IP' },
+              {
+                pattern: /^(\d{1,3}\.){3}\d{1,3}$/,
+                message: 'Ingrese una IP válida',
+              },
+            ]}
+          >
+            <Input placeholder="192.168.1.100" />
+          </Form.Item>
+
+          <Form.Item
+            name="port"
+            label="Puerto"
+            rules={[{ required: true, message: 'Ingrese el puerto' }]}
+          >
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder="9100"
+              min={1}
+              max={65535}
+            />
+          </Form.Item>
+
+          <Form.Item name="enabled" label="Estado" valuePropName="checked">
+            <Switch checkedChildren="Activa" unCheckedChildren="Deshabilitada" />
+          </Form.Item>
+
+          <Descriptions column={1} bordered size="small">
+            <Descriptions.Item label="Pantalla">
+              {selectedPrinterScreen?.name}
+            </Descriptions.Item>
+            <Descriptions.Item label="Cola">
+              {selectedPrinterScreen?.queueName}
+            </Descriptions.Item>
+          </Descriptions>
+        </Form>
       </Modal>
     </div>
   );

@@ -76,6 +76,10 @@ export const screensApi = {
   regenerateKey: (id: string) => api.post(`/screens/${id}/regenerate-key`),
   updatePreference: (id: string, data: any) =>
     api.put(`/screens/${id}/preference`, data),
+  updatePrinter: (id: string, data: any) =>
+    api.put(`/screens/${id}/printer`, data),
+  deletePrinter: (id: string) => api.delete(`/screens/${id}/printer`),
+  testPrinter: (id: string) => api.post(`/screens/${id}/printer/test`),
 };
 
 // Queues

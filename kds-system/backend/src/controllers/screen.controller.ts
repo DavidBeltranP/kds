@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { screenService } from '../services/screen.service';
+import { printerService } from '../services/printer.service';
 import {
   createScreenSchema,
   updateScreenSchema,
@@ -402,6 +403,89 @@ export const regenerateApiKey = asyncHandler(
     });
 
     res.json({ apiKey: screen.apiKey });
+  }
+);
+
+/**
+ * PUT /api/screens/:id/printer
+ * Actualizar o crear configuración de impresora
+ */
+export const updatePrinter = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const { name, ip, port, enabled } = req.body;
+
+    // Validar datos
+    if (!name || !ip || !port) {
+      throw new AppError(400, 'Name, IP and port are required');
+    }
+
+    const printer = await prisma.printer.upsert({
+      where: { screenId: id },
+      create: {
+        screenId: id,
+        name,
+        ip,
+        port: Number(port),
+        enabled: enabled ?? true,
+      },
+      update: {
+        name,
+        ip,
+        port: Number(port),
+        enabled: enabled ?? true,
+      },
+    });
+
+    // Invalidar cache
+    await screenService.invalidateConfigCache(id);
+
+    res.json(printer);
+  }
+);
+
+/**
+ * DELETE /api/screens/:id/printer
+ * Eliminar configuración de impresora
+ */
+export const deletePrinter = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+
+    await prisma.printer.deleteMany({
+      where: { screenId: id },
+    });
+
+    // Invalidar cache
+    await screenService.invalidateConfigCache(id);
+
+    res.json({ message: 'Printer configuration deleted' });
+  }
+);
+
+/**
+ * POST /api/screens/:id/printer/test
+ * Probar conexión con impresora
+ */
+export const testPrinter = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+
+    const printer = await prisma.printer.findUnique({
+      where: { screenId: id },
+    });
+
+    if (!printer) {
+      throw new AppError(404, 'Printer not configured for this screen');
+    }
+
+    const success = await printerService.testPrinter(printer.ip, printer.port);
+
+    if (!success) {
+      throw new AppError(500, 'Printer connection test failed');
+    }
+
+    res.json({ message: 'Printer connection successful', success: true });
   }
 );
 

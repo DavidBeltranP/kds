@@ -288,6 +288,12 @@ export class ScreenService {
       queueName: string;
       status: ScreenStatus;
       lastHeartbeat: Date | null;
+      printer: {
+        name: string;
+        ip: string;
+        port: number;
+        enabled: boolean;
+      } | null;
     }>
   > {
     const screens = await prisma.screen.findMany({
@@ -297,6 +303,7 @@ export class ScreenService {
           orderBy: { timestamp: 'desc' },
           take: 1,
         },
+        printer: true,
       },
     });
 
@@ -318,6 +325,12 @@ export class ScreenService {
         queueName: screen.queue.name,
         status,
         lastHeartbeat: screen.heartbeats[0]?.timestamp || null,
+        printer: screen.printer ? {
+          name: screen.printer.name,
+          ip: screen.printer.ip,
+          port: screen.printer.port,
+          enabled: screen.printer.enabled,
+        } : null,
       });
     }
 

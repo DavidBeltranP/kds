@@ -83,6 +83,26 @@ router.put(
   screenController.updatePreference
 );
 
+// Printer configuration
+router.put(
+  '/screens/:id/printer',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  screenController.updatePrinter
+);
+router.delete(
+  '/screens/:id/printer',
+  authenticate,
+  authorize('ADMIN'),
+  screenController.deletePrinter
+);
+router.post(
+  '/screens/:id/printer/test',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  screenController.testPrinter
+);
+
 // Screen status
 router.post(
   '/screens/:id/standby',
