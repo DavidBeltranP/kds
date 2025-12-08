@@ -2,16 +2,27 @@ import net from 'net';
 import { prisma } from '../config/database';
 import { Order, PrinterConfig } from '../types';
 import { printerLogger } from '../utils/logger';
+import { centralizedPrinterService } from './centralized-printer.service';
 
 /**
- * Servicio de impresión TCP
+ * Servicio de impresión TCP (Local) y Centralizado
  */
 export class PrinterService {
   private retries: number = 3;
   private timeout: number = 5000;
 
   /**
-   * Imprime una orden
+   * Obtiene el modo de impresión actual
+   */
+  async getPrintMode(): Promise<'LOCAL' | 'CENTRALIZED'> {
+    const config = await prisma.generalConfig.findUnique({
+      where: { id: 'general' },
+    });
+    return (config?.printMode as 'LOCAL' | 'CENTRALIZED') || 'LOCAL';
+  }
+
+  /**
+   * Imprime una orden usando el modo configurado (Local o Centralizado)
    */
   async printOrder(
     order: Order,
@@ -22,6 +33,25 @@ export class PrinterService {
       return false;
     }
 
+    const printMode = await this.getPrintMode();
+
+    if (printMode === 'CENTRALIZED') {
+      printerLogger.info(`[PRINT-MODE] Using CENTRALIZED print service for order ${order.identifier}`);
+      return centralizedPrinterService.printOrder(order, printerConfig);
+    }
+
+    // Modo LOCAL (TCP directo)
+    printerLogger.info(`[PRINT-MODE] Using LOCAL (TCP) print for order ${order.identifier}`);
+    return this.printOrderLocal(order, printerConfig);
+  }
+
+  /**
+   * Imprime una orden usando TCP directo (modo Local)
+   */
+  async printOrderLocal(
+    order: Order,
+    printerConfig: PrinterConfig
+  ): Promise<boolean> {
     const content = this.formatOrderForPrint(order);
 
     for (let attempt = 1; attempt <= this.retries; attempt++) {

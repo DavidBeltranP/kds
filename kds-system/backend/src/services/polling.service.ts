@@ -14,11 +14,38 @@ export class PollingService {
   private isRunning: boolean = false;
 
   /**
+   * Verifica si el modo Polling está habilitado (vs modo API)
+   */
+  async isPollingModeEnabled(): Promise<boolean> {
+    const config = await prisma.generalConfig.findUnique({
+      where: { id: 'general' },
+    });
+    return config?.ticketMode !== 'API'; // Si no es API, es POLLING
+  }
+
+  /**
+   * Obtiene el modo de tickets actual
+   */
+  async getTicketMode(): Promise<string> {
+    const config = await prisma.generalConfig.findUnique({
+      where: { id: 'general' },
+    });
+    return config?.ticketMode || 'POLLING';
+  }
+
+  /**
    * Inicia el polling de comandas
    */
-  start(): void {
+  async start(): Promise<void> {
     if (this.isRunning) {
       logger.warn('[POLLING] Already running');
+      return;
+    }
+
+    // Verificar si el modo polling está habilitado
+    const isPollingEnabled = await this.isPollingModeEnabled();
+    if (!isPollingEnabled) {
+      logger.info('[POLLING] Modo API habilitado - Polling no iniciado');
       return;
     }
 
@@ -122,10 +149,12 @@ export class PollingService {
   /**
    * Estado del servicio
    */
-  getStatus(): { running: boolean; interval: number } {
+  async getStatus(): Promise<{ running: boolean; interval: number; ticketMode: string }> {
+    const ticketMode = await this.getTicketMode();
     return {
       running: this.isRunning,
       interval: env.POLLING_INTERVAL,
+      ticketMode,
     };
   }
 }

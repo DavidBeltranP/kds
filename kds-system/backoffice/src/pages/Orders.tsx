@@ -26,7 +26,6 @@ import {
   UndoOutlined,
   CloseCircleOutlined,
   ClearOutlined,
-  PlusOutlined,
 } from '@ant-design/icons';
 import { ordersApi, queuesApi } from '../services/api';
 import dayjs from 'dayjs';
@@ -153,26 +152,6 @@ export function Orders() {
       loadData();
     } catch (error) {
       message.error('Error en limpieza');
-    }
-  };
-
-  const handleGenerateTest = async () => {
-    try {
-      await ordersApi.generateTest(15);
-      message.success('Ordenes de prueba generadas');
-      loadData();
-    } catch (error) {
-      message.error('Error generando ordenes de prueba');
-    }
-  };
-
-  const handleDeleteTestOrders = async () => {
-    try {
-      const { data } = await ordersApi.deleteTestOrders();
-      message.success(`${data.count} ordenes de prueba eliminadas`);
-      loadData();
-    } catch (error) {
-      message.error('Error eliminando ordenes de prueba');
     }
   };
 
@@ -407,33 +386,10 @@ export function Orders() {
           </Col>
         </Row>
 
-        {/* Acciones de desarrollo */}
+        {/* Acciones de mantenimiento */}
         <Row gutter={[16, 16]} style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f0f0f0' }}>
           <Col xs={24}>
-            <Space wrap style={{ width: '100%', justifyContent: 'space-between' }}>
-              <Space wrap>
-                <Button
-                  icon={<PlusOutlined />}
-                  type="primary"
-                  onClick={handleGenerateTest}
-                >
-                  Generar Prueba (15)
-                </Button>
-                <Popconfirm
-                  title="Eliminar ordenes de prueba?"
-                  description="Se eliminarán todas las ordenes que comienzan con TEST-"
-                  onConfirm={handleDeleteTestOrders}
-                  okText="Si, eliminar"
-                  cancelText="Cancelar"
-                >
-                  <Button
-                    icon={<DeleteOutlined />}
-                    danger
-                  >
-                    Eliminar Pruebas
-                  </Button>
-                </Popconfirm>
-              </Space>
+            <Space wrap style={{ width: '100%', justifyContent: 'flex-end' }}>
               <Button
                 icon={<DeleteOutlined />}
                 danger

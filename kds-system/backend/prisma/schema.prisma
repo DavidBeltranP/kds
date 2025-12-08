@@ -349,7 +349,25 @@ model OrderItem {
 model GeneralConfig {
   id                     String  @id @default("general")
 
-  // Lectura de comandas
+  // ============================================
+  // MODO DE CONFIGURACIÓN (Origen de tickets)
+  // ============================================
+  // "POLLING" = Importación desde MAXPOINT (método actual)
+  // "API" = Recepción via API REST
+  ticketMode             String  @default("POLLING") // POLLING | API
+
+  // ============================================
+  // MODO DE IMPRESIÓN
+  // ============================================
+  // "LOCAL" = Impresión TCP directa a impresora (método actual)
+  // "CENTRALIZED" = Impresión via servicio centralizado HTTP
+  printMode              String  @default("LOCAL") // LOCAL | CENTRALIZED
+
+  // Configuración del servicio centralizado de impresión
+  centralizedPrintUrl    String  @default("") // URL del servicio: http://ip:puerto/api/ImpresionTickets/Impresion
+  centralizedPrintPort   Int     @default(5000)
+
+  // Lectura de comandas (Polling)
   pollingInterval        Int     @default(2000) // ms
   orderLifetime          Int     @default(4)    // horas
 

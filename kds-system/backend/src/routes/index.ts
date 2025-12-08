@@ -291,4 +291,44 @@ router.post(
   configController.forcePoll
 );
 
+// ============================================
+// CONFIGURATION MODES (Ticket & Print modes)
+// ============================================
+router.get('/config/modes', authenticate, configController.getConfigModes);
+router.put(
+  '/config/modes',
+  authenticate,
+  authorize('ADMIN'),
+  configController.updateConfigModes
+);
+router.post(
+  '/config/print/test-centralized',
+  authenticate,
+  authorize('ADMIN'),
+  configController.testCentralizedPrint
+);
+
+// ============================================
+// API TICKETS (Compatible con sistema anterior)
+// ============================================
+// Endpoint /config para obtener config de pantalla por IP (sin auth para pantallas)
+router.get('/config', configController.getScreenConfigByIp);
+
+// Endpoint /comandas para recibir/enviar comandas por IP (sin auth para pantallas)
+router.post('/comandas', configController.receiveComandas);
+
+// Endpoints para recibir tickets via API (requieren auth)
+router.post(
+  '/tickets/receive',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  configController.receiveTicket
+);
+router.post(
+  '/tickets/receive-batch',
+  authenticate,
+  authorize('ADMIN', 'OPERATOR'),
+  configController.receiveTicketsBatch
+);
+
 export default router;

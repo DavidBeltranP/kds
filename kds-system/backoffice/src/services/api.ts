@@ -145,6 +145,15 @@ export const configApi = {
   forcePoll: () => api.post('/config/polling/force'),
   health: () => api.get('/config/health'),
   stats: () => api.get('/config/stats'),
+  // Modos de configuración (Tickets e Impresión)
+  getModes: () => api.get('/config/modes'),
+  updateModes: (data: {
+    ticketMode?: 'POLLING' | 'API';
+    printMode?: 'LOCAL' | 'CENTRALIZED';
+    centralizedPrintUrl?: string;
+    centralizedPrintPort?: number;
+  }) => api.put('/config/modes', data),
+  testCentralizedPrint: () => api.post('/config/print/test-centralized'),
 };
 
 export default api;
