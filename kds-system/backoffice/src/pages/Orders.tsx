@@ -27,7 +27,7 @@ import {
   CloseCircleOutlined,
   ClearOutlined,
 } from '@ant-design/icons';
-import { ordersApi, queuesApi } from '../services/api';
+import { ordersApi, queuesApi, screensApi } from '../services/api';
 import dayjs from 'dayjs';
 
 interface OrderItem {
@@ -56,9 +56,15 @@ interface Queue {
   name: string;
 }
 
+interface Screen {
+  id: string;
+  name: string;
+}
+
 export function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [queues, setQueues] = useState<Queue[]>([]);
+  const [screens, setScreens] = useState<Screen[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -67,6 +73,7 @@ export function Orders() {
   const [filters, setFilters] = useState({
     status: undefined as string | undefined,
     queueId: undefined as string | undefined,
+    screenId: undefined as string | undefined,
     search: '',
     date: null as dayjs.Dayjs | null,
   });
@@ -79,6 +86,7 @@ export function Orders() {
 
   useEffect(() => {
     loadQueues();
+    loadScreens();
   }, []);
 
   useEffect(() => {
@@ -94,12 +102,22 @@ export function Orders() {
     }
   };
 
+  const loadScreens = async () => {
+    try {
+      const { data } = await screensApi.getAll();
+      setScreens(data);
+    } catch (error) {
+      console.error('Error loading screens:', error);
+    }
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
       const params: any = {};
       if (filters.status) params.status = filters.status;
       if (filters.queueId) params.queueId = filters.queueId;
+      if (filters.screenId) params.screenId = filters.screenId;
       if (filters.search) params.search = filters.search;
       if (filters.date) params.date = filters.date.format('YYYY-MM-DD');
 
@@ -347,6 +365,21 @@ export function Orders() {
             </Select>
           </Col>
           <Col xs={24} sm={12} md={6} lg={4}>
+            <Select
+              placeholder="Pantalla"
+              allowClear
+              style={{ width: '100%' }}
+              value={filters.screenId}
+              onChange={(value) => setFilters({ ...filters, screenId: value })}
+            >
+              {screens.map((s) => (
+                <Select.Option key={s.id} value={s.id}>
+                  {s.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} sm={12} md={6} lg={4}>
             <DatePicker
               placeholder="Fecha"
               style={{ width: '100%' }}
@@ -375,6 +408,7 @@ export function Orders() {
                   setFilters({
                     status: undefined,
                     queueId: undefined,
+                    screenId: undefined,
                     search: '',
                     date: null,
                   })

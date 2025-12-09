@@ -75,7 +75,7 @@ export function StandbyScreen() {
           </button>
         ) : (
           <p className="text-sm">
-            Presione <span className="text-yellow-500 font-bold">↓+↑</span> para activar
+            Presione <span className="text-yellow-500 font-bold">← + →</span> para activar
           </p>
         )}
       </div>

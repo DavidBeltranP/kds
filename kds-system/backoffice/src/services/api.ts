@@ -139,6 +139,13 @@ export const configApi = {
   updateGeneral: (data: any) => api.put('/config/general', data),
   getMxp: () => api.get('/config/mxp'),
   updateMxp: (data: any) => api.put('/config/mxp', data),
+  testMxpConnection: (data: {
+    mxpHost: string;
+    mxpPort?: number;
+    mxpUser: string;
+    mxpPassword: string;
+    mxpDatabase: string;
+  }) => api.post('/config/mxp/test', data),
   getPollingStatus: () => api.get('/config/polling'),
   startPolling: () => api.post('/config/polling/start'),
   stopPolling: () => api.post('/config/polling/stop'),
@@ -154,6 +161,24 @@ export const configApi = {
     centralizedPrintPort?: number;
   }) => api.put('/config/modes', data),
   testCentralizedPrint: () => api.post('/config/print/test-centralized'),
+};
+
+// Mirror KDS (Espejo de órdenes del local - SOLO LECTURA)
+export const mirrorApi = {
+  configure: (data: {
+    host: string;
+    port?: number;
+    user: string;
+    password: string;
+    database: string;
+  }) => api.post('/mirror/configure', data),
+  test: () => api.get('/mirror/test'),
+  stats: () => api.get('/mirror/stats'),
+  getOrders: (params?: { screen?: string; queue?: string }) =>
+    api.get('/mirror/orders', { params }),
+  getScreens: () => api.get('/mirror/screens'),
+  getQueues: () => api.get('/mirror/queues'),
+  disconnect: () => api.post('/mirror/disconnect'),
 };
 
 export default api;

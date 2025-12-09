@@ -2,6 +2,7 @@ import { Header } from './components/Header';
 import { OrderGrid } from './components/OrderGrid';
 import { Footer } from './components/Footer';
 import { StandbyScreen } from './components/StandbyScreen';
+import { MirrorApp } from './MirrorApp';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useKeyboardController } from './hooks/useKeyboard';
 import { useConfigStore, useAppearance } from './store/configStore';
@@ -13,11 +14,16 @@ function getScreenConfig() {
   return {
     screenId: params.get('screenId') || import.meta.env.VITE_SCREEN_ID || '',
     apiKey: params.get('apiKey') || import.meta.env.VITE_API_KEY || '',
+    // Modo mirror
+    mode: params.get('mode') || '',
+    token: params.get('token') || '',
+    screenFilter: params.get('screen') || '',
+    queueFilter: params.get('queue') || '',
   };
 }
 
-function App() {
-  const { screenId, apiKey } = getScreenConfig();
+// Componente principal para modo normal
+function NormalApp({ screenId, apiKey }: { screenId: string; apiKey: string }) {
   const { isLoading, error } = useConfigStore();
   const isStandby = useIsStandby();
   const appearance = useAppearance();
@@ -103,6 +109,47 @@ function App() {
       <Footer />
     </div>
   );
+}
+
+// Componente App que decide qué modo usar
+function App() {
+  const { screenId, apiKey, mode, token, screenFilter, queueFilter } = getScreenConfig();
+
+  // Si es modo mirror, usar MirrorApp
+  if (mode === 'mirror') {
+    if (!token) {
+      return (
+        <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-purple-500 mb-4">
+              Modo Mirror
+            </h1>
+            <p className="text-gray-400 mb-4">
+              Se requiere un token de autenticacion para el modo mirror.
+            </p>
+            <code className="bg-gray-800 text-green-400 px-4 py-2 rounded block mb-4">
+              ?mode=mirror&token=JWT_TOKEN
+            </code>
+            <p className="text-gray-500 text-sm">
+              Parametros opcionales: screen=Pantalla1, queue=LINEAS
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <MirrorApp
+        token={token}
+        screenId={screenId || 'mirror'}
+        screenFilter={screenFilter}
+        queueFilter={queueFilter}
+      />
+    );
+  }
+
+  // Modo normal
+  return <NormalApp screenId={screenId} apiKey={apiKey} />;
 }
 
 export default App;

@@ -7,12 +7,12 @@ import { socketService } from '../../services/socket';
 // Mapeo de teclas internas a símbolos visuales de la botonera
 const keyToVisual: Record<string, string> = {
   'h': '1',
-  '3': '2',
-  '1': '3',
   'f': '4',
   'j': '5',
-  'g': '↓',
-  'i': '↑',
+  'g': '←',
+  'i': '→',
+  'arrowleft': '←',
+  'arrowright': '→',
 };
 
 function getVisualKey(key: string): string {
@@ -207,7 +207,7 @@ export function Footer() {
           }}
         >
           <span style={{ ...buttonStyle, color: '#facc15', marginRight: touchEnabled ? '4px' : '4px' }}>
-            {touchEnabled ? '⏻' : '↓+↑'}
+            {touchEnabled ? '⏻' : '← + →'}
           </span>
           {isStandby ? 'Activar' : 'Standby'}
         </button>

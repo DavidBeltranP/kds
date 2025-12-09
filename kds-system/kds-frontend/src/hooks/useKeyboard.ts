@@ -113,11 +113,11 @@ export function useKeyboardController() {
       },
     ].filter((a) => a.key);
 
-    // Crear combos - presionar g + i (↓ + ↑) casi simultáneamente
+    // Crear combos - presionar g + i (← + →) casi simultáneamente
     // La botonera envía las teclas en secuencia con delay, aumentamos la ventana
     const combos = [
       {
-        keys: ['g', 'i'], // ↓ + ↑
+        keys: ['g', 'i'], // ← + →
         timeWindow: 1500, // Las dos teclas deben llegar en 1.5 segundos
         action: 'togglePower',
         handler: handleTogglePower,

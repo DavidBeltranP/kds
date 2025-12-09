@@ -40,6 +40,13 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 1000, // máximo 1000 requests por ventana
   message: { error: 'Too many requests, please try again later' },
+  skip: (req) => {
+    // Excluir rutas de mirror, config y auth del rate limiting
+    // Nota: req.path ya viene sin /api/ porque el limiter está montado en /api/
+    return req.path.startsWith('/mirror/') ||
+           req.path === '/config/health' ||
+           req.path.startsWith('/auth/');
+  },
 });
 app.use('/api/', limiter);
 

@@ -72,3 +72,90 @@ export async function queryMxp<T>(
   const result = await request.query<T>(query);
   return result.recordset;
 }
+
+/**
+ * Probar conexión con parámetros personalizados (sin usar el pool global)
+ * Útil para validar credenciales antes de guardar
+ */
+export async function testMxpConnectionWithParams(params: {
+  host: string;
+  port?: number;
+  user: string;
+  password: string;
+  database: string;
+}): Promise<{ success: boolean; message: string; details?: string }> {
+  const testConfig: sql.config = {
+    server: params.host,
+    port: params.port || 1433,
+    user: params.user,
+    password: params.password,
+    database: params.database,
+    options: {
+      encrypt: false,
+      trustServerCertificate: true,
+      enableArithAbort: true,
+    },
+    connectionTimeout: 10000,
+    requestTimeout: 10000,
+  };
+
+  let testPool: sql.ConnectionPool | null = null;
+
+  try {
+    // Intentar conectar
+    testPool = await new sql.ConnectionPool(testConfig).connect();
+
+    // Verificar que podemos ejecutar una query simple
+    const result = await testPool.request().query<{ test: number }>('SELECT 1 as test');
+
+    if (result.recordset[0]?.test === 1) {
+      // Intentar obtener información adicional del servidor
+      const versionResult = await testPool.request().query<{ version: string }>(
+        'SELECT @@VERSION as version'
+      );
+      const version = versionResult.recordset[0]?.version?.split('\n')[0] || 'SQL Server';
+
+      return {
+        success: true,
+        message: 'Conexion exitosa',
+        details: version,
+      };
+    }
+
+    return {
+      success: false,
+      message: 'La conexion se establecio pero no se pudo verificar',
+    };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Mensajes de error más amigables
+    let friendlyMessage = 'Error de conexion';
+    if (errorMessage.includes('ECONNREFUSED')) {
+      friendlyMessage = 'No se puede conectar al servidor. Verifique la IP y que SQL Server este en ejecucion.';
+    } else if (errorMessage.includes('ETIMEOUT') || errorMessage.includes('timeout')) {
+      friendlyMessage = 'Tiempo de espera agotado. Verifique la IP, puerto y que el firewall permita la conexion.';
+    } else if (errorMessage.includes('Login failed')) {
+      friendlyMessage = 'Credenciales incorrectas. Verifique usuario y contrasena.';
+    } else if (errorMessage.includes('Cannot open database')) {
+      friendlyMessage = 'No se puede acceder a la base de datos. Verifique el nombre y permisos.';
+    } else if (errorMessage.includes('ENOTFOUND')) {
+      friendlyMessage = 'Servidor no encontrado. Verifique el nombre del host.';
+    }
+
+    return {
+      success: false,
+      message: friendlyMessage,
+      details: errorMessage,
+    };
+  } finally {
+    // Siempre cerrar la conexión de prueba
+    if (testPool) {
+      try {
+        await testPool.close();
+      } catch {
+        // Ignorar errores al cerrar
+      }
+    }
+  }
+}

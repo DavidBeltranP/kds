@@ -14,6 +14,7 @@ import {
   MenuUnfoldOutlined,
   OrderedListOutlined,
   TeamOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 
@@ -96,6 +97,17 @@ export function Layout() {
             key: '/users',
             icon: <TeamOutlined />,
             label: 'Usuarios',
+          },
+        ]
+      : []),
+    // Solo ADMIN puede ver Mirror
+    ...(isAdmin
+      ? [
+          { type: 'divider' as const },
+          {
+            key: '/mirror',
+            icon: <EyeOutlined />,
+            label: 'Mirror KDS',
           },
         ]
       : []),

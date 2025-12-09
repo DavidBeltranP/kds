@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../config/database';
 import { redis, REDIS_KEYS } from '../config/redis';
+import { testMxpConnectionWithParams } from '../config/mxp';
 import { pollingService } from '../services/polling.service';
 import { printerService } from '../services/printer.service';
 import { centralizedPrinterService } from '../services/centralized-printer.service';
@@ -70,12 +71,25 @@ export const getMxpConfig = asyncHandler(
       where: { id: 'general' },
       select: {
         mxpHost: true,
+        mxpPort: true,
         mxpUser: true,
         mxpDatabase: true,
+        pollingInterval: true,
+        lastPollTime: true,
+        lastOrderId: true,
       },
     });
 
-    res.json(config || {});
+    res.json({
+      mxpHost: config?.mxpHost || '',
+      mxpPort: config?.mxpPort || null,
+      mxpUser: config?.mxpUser || '',
+      mxpPassword: '', // Never return actual password, just show field exists
+      mxpDatabase: config?.mxpDatabase || '',
+      pollingInterval: config?.pollingInterval || 2000,
+      lastPollTime: config?.lastPollTime || null,
+      lastOrderId: config?.lastOrderId || null,
+    });
   }
 );
 
@@ -85,13 +99,16 @@ export const getMxpConfig = asyncHandler(
  */
 export const updateMxpConfig = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    const { mxpHost, mxpUser, mxpPassword, mxpDatabase } = req.body;
+    const { mxpHost, mxpPort, mxpUser, mxpPassword, mxpDatabase, pollingInterval } = req.body;
 
     const data: any = {};
     if (mxpHost !== undefined) data.mxpHost = mxpHost;
+    if (mxpPort !== undefined) data.mxpPort = mxpPort;
     if (mxpUser !== undefined) data.mxpUser = mxpUser;
-    if (mxpPassword !== undefined) data.mxpPassword = mxpPassword;
+    // Only update password if a non-empty value is provided
+    if (mxpPassword !== undefined && mxpPassword !== '') data.mxpPassword = mxpPassword;
     if (mxpDatabase !== undefined) data.mxpDatabase = mxpDatabase;
+    if (pollingInterval !== undefined) data.pollingInterval = pollingInterval;
 
     await prisma.generalConfig.upsert({
       where: { id: 'general' },
@@ -99,7 +116,61 @@ export const updateMxpConfig = asyncHandler(
       update: data,
     });
 
+    // Restart polling if it was running to apply new config
+    const pollingStatus = await pollingService.getStatus();
+    if (pollingStatus.running) {
+      pollingService.stop();
+      await pollingService.start();
+    }
+
     res.json({ message: 'MXP configuration updated' });
+  }
+);
+
+/**
+ * POST /api/config/mxp/test
+ * Probar conexión con MAXPOINT usando parámetros proporcionados
+ */
+export const testMxpConnection = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response) => {
+    const { mxpHost, mxpPort, mxpUser, mxpPassword, mxpDatabase } = req.body;
+
+    // Validar campos requeridos
+    if (!mxpHost || !mxpUser || !mxpDatabase) {
+      res.status(400).json({
+        success: false,
+        message: 'Faltan campos requeridos: host, usuario y base de datos son obligatorios',
+      });
+      return;
+    }
+
+    // Si no se proporciona password, intentar usar el guardado
+    let password = mxpPassword;
+    if (!password) {
+      const config = await prisma.generalConfig.findUnique({
+        where: { id: 'general' },
+        select: { mxpPassword: true },
+      });
+      password = config?.mxpPassword || '';
+    }
+
+    if (!password) {
+      res.status(400).json({
+        success: false,
+        message: 'Se requiere la contrasena para probar la conexion',
+      });
+      return;
+    }
+
+    const result = await testMxpConnectionWithParams({
+      host: mxpHost,
+      port: mxpPort || undefined,
+      user: mxpUser,
+      password,
+      database: mxpDatabase,
+    });
+
+    res.json(result);
   }
 );
 

@@ -147,6 +147,11 @@ export function OrderGrid() {
   const currentPage = useOrderStore((state) => state.currentPage);
   const { setLastFinished } = useOrderStore();
 
+  // Debug: Log cuando cambian las órdenes
+  useEffect(() => {
+    console.log('[OrderGrid] Orders in store:', allOrders.length, allOrders.map(o => o.id));
+  }, [allOrders]);
+
   // Handler para finalizar orden via touch/click
   const handleFinishOrder = useCallback((orderId: string) => {
     console.log('[Touch] Finishing order:', orderId);

@@ -12,6 +12,7 @@ import { Orders } from './pages/Orders';
 import { Appearance } from './pages/Appearance';
 import { Settings } from './pages/Settings';
 import { Users } from './pages/Users';
+import Mirror from './pages/Mirror';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -142,6 +143,14 @@ function App() {
               element={
                 <RoleRoute allowedRoles={['ADMIN']}>
                   <Users />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="mirror"
+              element={
+                <RoleRoute allowedRoles={['ADMIN']}>
+                  <Mirror />
                 </RoleRoute>
               }
             />

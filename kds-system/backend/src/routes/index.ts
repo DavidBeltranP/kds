@@ -8,6 +8,7 @@ import * as screenController from '../controllers/screen.controller';
 import * as queueController from '../controllers/queue.controller';
 import * as orderController from '../controllers/order.controller';
 import * as configController from '../controllers/config.controller';
+import * as mirrorController from '../controllers/mirror.controller';
 
 const router = Router();
 
@@ -269,6 +270,12 @@ router.put(
   authorize('ADMIN'),
   configController.updateMxpConfig
 );
+router.post(
+  '/config/mxp/test',
+  authenticate,
+  authorize('ADMIN'),
+  configController.testMxpConnection
+);
 
 // Polling control
 router.get('/config/polling', authenticate, configController.getPollingStatus);
@@ -329,6 +336,27 @@ router.post(
   authenticate,
   authorize('ADMIN', 'OPERATOR'),
   configController.receiveTicketsBatch
+);
+
+// ============================================
+// MIRROR ROUTES (Espejo de KDS remoto - SOLO LECTURA)
+// ============================================
+router.post(
+  '/mirror/configure',
+  authenticate,
+  authorize('ADMIN'),
+  mirrorController.configureMirror
+);
+router.get('/mirror/test', authenticate, mirrorController.testMirrorConnection);
+router.get('/mirror/stats', authenticate, mirrorController.getMirrorStats);
+router.get('/mirror/orders', authenticate, mirrorController.getMirrorOrders);
+router.get('/mirror/screens', authenticate, mirrorController.getMirrorScreens);
+router.get('/mirror/queues', authenticate, mirrorController.getMirrorQueues);
+router.post(
+  '/mirror/disconnect',
+  authenticate,
+  authorize('ADMIN'),
+  mirrorController.disconnectMirror
 );
 
 export default router;

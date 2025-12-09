@@ -1,0 +1,10 @@
+Lee todos los archivos dentro de la carpeta prew para que tengas el contexto completo.
+Vamos a incorporar esta implementación en modo API para la gestión de los tickets, pero debe ser configurable. Es decir, desde la pantalla de configuración se debe poder elegir, mediante un selector dentro de un apartado llamado “Modo de configuración”, si deseamos continuar con la importación de tickets de la manera actual o utilizar el modo API.
+
+Adicionalmente, vamos a implementar el nuevo servicio de impresión (denominado Centralizado) junto con el método actual, que llamaremos Local. Para ello, también debes enfocarte en la implementación del nuevo formato de impresión y agregar en la pantalla de configuración un apartado llamado “Modo de impresión”, donde se pueda seleccionar si utilizamos el método Local o el método Centralizado.
+Es importante que lo que tenemos actualmente continúe funcionando, mientras incorporamos estas dos nuevas funcionalidades que se detallan en la carpeta prew.
+
+La carpeta prew forma parte de una versión anterior de este mismo aplicativo, donde estas funcionalidades ya están implementadas. No queremos perder el avance existente en ese proyecto; al contrario, buscamos potenciarlo e integrarlo con el actual.
+
+en el backoffice deshabilita ya la generacion de ordenes de prueba.
+

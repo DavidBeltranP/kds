@@ -234,57 +234,7 @@ export function OrderCard({
               </div>
             )}
 
-            {/* Barra de canal dividida */}
-            <div
-              style={{
-                display: 'flex',
-                flexShrink: 0,
-              }}
-            >
-              <div
-                style={{
-                  flex: 1,
-                  background: channelColor,
-                  padding: '6px 12px',
-                  color: '#fff',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {order.channel}
-              </div>
-              <div
-                style={{
-                  flex: 1,
-                  background: channelColor,
-                  padding: '6px 12px',
-                  color: '#fff',
-                  fontSize: '11px',
-                  textAlign: 'right',
-                  borderLeft: '1px solid rgba(255,255,255,0.3)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-end',
-                  gap: '8px',
-                }}
-              >
-                <span>{order.channel}</span>
-                {finishKey && (
-                  <span
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.2)',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontSize: '10px',
-                      fontWeight: 'bold',
-                    }}
-                  >
-                    [{finishKey}]
-                  </span>
-                )}
-              </div>
-            </div>
+{/* Barra de canal removida - ahora está en el footer */}
           </>
         )}
 
@@ -369,47 +319,61 @@ export function OrderCard({
           ))}
         </div>
 
-        {/* Footer "Final" - Solo en última parte de split */}
+        {/* Footer con canal - Solo en última parte de split */}
         {isLastPart && isSplit && (
           <div
             style={{
-              padding: '8px 12px',
-              textAlign: 'center',
-              borderTop: '1px solid #e0e0e0',
+              display: 'flex',
               flexShrink: 0,
             }}
           >
-            <span style={{ color: timeColor.color, fontSize: '12px', fontWeight: 'bold' }}>
-              Final
-            </span>
+            {/* Canal */}
+            <div
+              style={{
+                flex: 1,
+                background: channelColor,
+                padding: '8px 12px',
+                color: '#fff',
+                fontWeight: 'bold',
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              <span>{order.channel}</span>
+            </div>
           </div>
         )}
 
-        {/* Footer con timer - Solo si NO es split */}
-        {isLastPart && !isSplit && showTimer && (
+        {/* Footer con canal - Solo si NO es split */}
+        {isLastPart && !isSplit && (
           <div
             style={{
               display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: timeColor.color,
-              padding: '8px 12px',
               flexShrink: 0,
             }}
           >
-            <span
+            {/* Canal */}
+            <div
               style={{
+                flex: 1,
+                background: channelColor,
+                padding: '8px 12px',
                 color: '#fff',
-                fontFamily: 'monospace',
                 fontWeight: 'bold',
-                fontSize: '16px',
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
               }}
             >
-              {elapsedTime.formatted}
-            </span>
-            <span style={{ color: '#fff', fontSize: '12px' }}>
-              {order.items.length} items
-            </span>
+              <span>{order.channel}</span>
+            </div>
           </div>
         )}
       </div>

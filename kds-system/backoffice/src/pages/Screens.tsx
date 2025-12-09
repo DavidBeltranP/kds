@@ -154,10 +154,11 @@ export function Screens() {
       const { data } = await screensApi.getConfig(screen.id);
       setSelectedScreen(data);
       appearanceForm.setFieldsValue(data.appearance);
-      // Cargar keyboardConfig y agregar touchEnabled desde preference
+      // Cargar keyboardConfig y agregar touchEnabled/botoneraEnabled desde preference
       keyboardForm.setFieldsValue({
         ...data.keyboardConfig,
         touchEnabled: data.preference?.touchEnabled ?? false,
+        enabled: data.preference?.botoneraEnabled ?? true, // Botonera habilitada por defecto
       });
       setConfigModalOpen(true);
     } catch (error) {
@@ -234,13 +235,16 @@ export function Screens() {
     if (!selectedScreen) return;
     try {
       const values = await keyboardForm.validateFields();
-      const { touchEnabled, ...keyboardValues } = values;
+      const { touchEnabled, enabled, ...keyboardValues } = values;
 
       // Guardar configuración de teclado
       await screensApi.updateKeyboard(selectedScreen.id, keyboardValues);
 
-      // Guardar touchEnabled en preferencias
-      await screensApi.updatePreference(selectedScreen.id, { touchEnabled });
+      // Guardar touchEnabled y botoneraEnabled en preferencias
+      await screensApi.updatePreference(selectedScreen.id, {
+        touchEnabled,
+        botoneraEnabled: enabled
+      });
 
       message.success('Configuracion guardada');
     } catch (error) {

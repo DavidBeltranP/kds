@@ -80,25 +80,116 @@ export interface AppearanceConfig {
   cardColor: string;
   textColor: string;
   accentColor: string;
-  // Tipografia de productos
+
+  // ============================================
+  // TIPOGRAFÍA HEADER (Orden #xxx)
+  // ============================================
+  headerFontFamily: string;
+  headerFontSize: string;
+  headerFontWeight?: string;
+  headerFontStyle?: string;
+  headerBgColor?: string;
+  headerTextColorCustom?: string;
+  showHeader?: boolean;
+
+  // ============================================
+  // TIPOGRAFÍA TIMER (00:00)
+  // ============================================
+  timerFontFamily?: string;
+  timerFontSize?: string;
+  timerFontWeight?: string;
+  timerFontStyle?: string;
+  timerTextColor?: string;
+  showTimer: boolean;
+
+  // ============================================
+  // TIPOGRAFÍA CLIENTE (nombre)
+  // ============================================
+  clientFontFamily?: string;
+  clientFontSize?: string;
+  clientFontWeight?: string;
+  clientFontStyle?: string;
+  clientTextColor?: string;
+  clientBgColor?: string;
+  showClient?: boolean;
+
+  // ============================================
+  // TIPOGRAFÍA CANTIDAD (5x)
+  // ============================================
+  quantityFontFamily?: string;
+  quantityFontSize?: string;
+  quantityFontWeight?: string;
+  quantityFontStyle?: string;
+  quantityTextColor?: string;
+  showQuantity?: boolean;
+
+  // ============================================
+  // TIPOGRAFÍA PRODUCTOS (nombre del producto)
+  // ============================================
   productFontFamily: string;
   productFontSize: string;
   productFontWeight: string;
-  // Tipografia de modificadores
+  productFontStyle?: string;
+  productTextColor?: string;
+  productBgColor?: string;
+  productUppercase?: boolean;
+
+  // ============================================
+  // TIPOGRAFÍA SUBPRODUCTOS/SUBITEMS (1x Pepsi, 1x Crispy)
+  // ============================================
+  subitemFontFamily?: string;
+  subitemFontSize?: string;
+  subitemFontWeight?: string;
+  subitemFontStyle?: string;
+  subitemTextColor?: string;
+  subitemBgColor?: string;
+  subitemIndent?: number;
+  showSubitems?: boolean;
+
+  // ============================================
+  // TIPOGRAFÍA MODIFICADORES/NOTAS (*10x PRESAS, etc)
+  // ============================================
   modifierFontFamily: string;
   modifierFontSize: string;
-  modifierFontColor: string;
+  modifierFontWeight?: string;
   modifierFontStyle: string;
-  // Cabecera de orden
-  headerFontFamily: string;
-  headerFontSize: string;
+  modifierFontColor: string;
+  modifierBgColor?: string;
+  modifierIndent?: number;
+  showModifiers?: boolean;
+
+  // ============================================
+  // TIPOGRAFÍA NOTAS ESPECIALES (* nota)
+  // ============================================
+  notesFontFamily?: string;
+  notesFontSize?: string;
+  notesFontWeight?: string;
+  notesFontStyle?: string;
+  notesTextColor?: string;
+  notesBgColor?: string;
+  notesIndent?: number;
+  showNotes?: boolean;
+
+  // ============================================
+  // TIPOGRAFÍA CANAL/FOOTER (KIOSKO-EFECTIVO)
+  // ============================================
+  channelFontFamily?: string;
+  channelFontSize?: string;
+  channelFontWeight?: string;
+  channelFontStyle?: string;
+  channelTextColor?: string;
+  channelUppercase?: boolean;
+  showChannel?: boolean;
+
+  // Legacy fields
   headerShowChannel: boolean;
   headerShowTime: boolean;
+
   // Disposicion adicional
   rows: number;
   maxItemsPerColumn: number;
+
   // Opciones de visualizacion
-  showTimer: boolean;
   showOrderNumber: boolean;
   animationEnabled: boolean;
   cardColors: CardColor[];

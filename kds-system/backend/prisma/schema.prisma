@@ -144,7 +144,7 @@ model Appearance {
   id               String  @id @default(cuid())
   screenId         String  @unique
 
-  // Tipografía
+  // Tipografía general (legacy)
   fontSize         String  @default("20px")
   fontFamily       String  @default("Arimo-Medium")
 
@@ -168,34 +168,120 @@ model Appearance {
   textColor          String  @default("#1a1a2e")
   accentColor        String  @default("#e94560")
 
-  // Tipografia de productos
-  productFontFamily  String  @default("Inter, sans-serif")
-  productFontSize    String  @default("medium")
-  productFontWeight  String  @default("bold")
+  // ============================================
+  // TIPOGRAFÍA HEADER (Orden #xxx)
+  // ============================================
+  headerFontFamily     String  @default("Inter, sans-serif")
+  headerFontSize       String  @default("medium")  // xsmall, small, medium, large, xlarge, xxlarge
+  headerFontWeight     String  @default("bold")    // normal, medium, semibold, bold
+  headerFontStyle      String  @default("normal")  // normal, italic
+  headerBgColor        String  @default("")        // Color de fondo (vacío = usa SLA color)
+  headerTextColorCustom String @default("#ffffff") // Color de texto
+  showHeader           Boolean @default(true)      // Mostrar/ocultar
 
-  // Tipografia de modificadores
-  modifierFontFamily String  @default("Inter, sans-serif")
-  modifierFontSize   String  @default("small")
-  modifierFontColor  String  @default("#666666")
-  modifierFontStyle  String  @default("italic")
+  // ============================================
+  // TIPOGRAFÍA TIMER (00:00)
+  // ============================================
+  timerFontFamily      String  @default("monospace")
+  timerFontSize        String  @default("medium")
+  timerFontWeight      String  @default("bold")
+  timerFontStyle       String  @default("normal")
+  timerTextColor       String  @default("#ffffff")
+  showTimer            Boolean @default(true)
 
-  // Cabecera de orden
-  headerFontFamily   String  @default("Inter, sans-serif")
-  headerFontSize     String  @default("medium")
-  headerShowChannel  Boolean @default(true)
-  headerShowTime     Boolean @default(true)
+  // ============================================
+  // TIPOGRAFÍA CLIENTE (nombre)
+  // ============================================
+  clientFontFamily     String  @default("Inter, sans-serif")
+  clientFontSize       String  @default("small")
+  clientFontWeight     String  @default("normal")
+  clientFontStyle      String  @default("normal")
+  clientTextColor      String  @default("#ffffff")
+  clientBgColor        String  @default("")        // Vacío = usa SLA color
+  showClient           Boolean @default(true)
+
+  // ============================================
+  // TIPOGRAFÍA CANTIDAD (5x)
+  // ============================================
+  quantityFontFamily   String  @default("Inter, sans-serif")
+  quantityFontSize     String  @default("medium")
+  quantityFontWeight   String  @default("bold")
+  quantityFontStyle    String  @default("normal")
+  quantityTextColor    String  @default("")        // Vacío = usa SLA color
+  showQuantity         Boolean @default(true)
+
+  // ============================================
+  // TIPOGRAFÍA PRODUCTOS (nombre del producto)
+  // ============================================
+  productFontFamily    String  @default("Inter, sans-serif")
+  productFontSize      String  @default("medium")
+  productFontWeight    String  @default("bold")
+  productFontStyle     String  @default("normal")
+  productTextColor     String  @default("")        // Vacío = usa textColor general
+  productBgColor       String  @default("")        // Vacío = transparente
+  productUppercase     Boolean @default(true)
+
+  // ============================================
+  // TIPOGRAFÍA SUBPRODUCTOS/SUBITEMS (1x Pepsi, 1x Crispy)
+  // ============================================
+  subitemFontFamily    String  @default("Inter, sans-serif")
+  subitemFontSize      String  @default("small")
+  subitemFontWeight    String  @default("normal")
+  subitemFontStyle     String  @default("normal")
+  subitemTextColor     String  @default("#333333")
+  subitemBgColor       String  @default("")
+  subitemIndent        Int     @default(24)        // Indentación en px
+  showSubitems         Boolean @default(true)
+
+  // ============================================
+  // TIPOGRAFÍA MODIFICADORES/NOTAS (*10x PRESAS, etc)
+  // ============================================
+  modifierFontFamily   String  @default("Inter, sans-serif")
+  modifierFontSize     String  @default("small")
+  modifierFontWeight   String  @default("normal")
+  modifierFontStyle    String  @default("italic")
+  modifierFontColor    String  @default("#666666")
+  modifierBgColor      String  @default("")
+  modifierIndent       Int     @default(24)
+  showModifiers        Boolean @default(true)
+
+  // ============================================
+  // TIPOGRAFÍA NOTAS ESPECIALES (* nota)
+  // ============================================
+  notesFontFamily      String  @default("Inter, sans-serif")
+  notesFontSize        String  @default("small")
+  notesFontWeight      String  @default("normal")
+  notesFontStyle       String  @default("italic")
+  notesTextColor       String  @default("#ff9800")
+  notesBgColor         String  @default("")
+  notesIndent          Int     @default(24)
+  showNotes            Boolean @default(true)
+
+  // ============================================
+  // TIPOGRAFÍA CANAL/FOOTER (KIOSKO-EFECTIVO)
+  // ============================================
+  channelFontFamily    String  @default("Inter, sans-serif")
+  channelFontSize      String  @default("small")
+  channelFontWeight    String  @default("bold")
+  channelFontStyle     String  @default("normal")
+  channelTextColor     String  @default("#ffffff")
+  channelUppercase     Boolean @default(true)
+  showChannel          Boolean @default(true)
+
+  // Legacy fields (mantener compatibilidad)
+  headerShowChannel    Boolean @default(true)
+  headerShowTime       Boolean @default(true)
 
   // Disposicion adicional
-  rows               Int     @default(3)
-  maxItemsPerColumn  Int     @default(6)
+  rows                 Int     @default(3)
+  maxItemsPerColumn    Int     @default(6)
 
   // Opciones de visualizacion
-  showTimer          Boolean @default(true)
-  showOrderNumber    Boolean @default(true)
-  animationEnabled   Boolean @default(true)
+  showOrderNumber      Boolean @default(true)
+  animationEnabled     Boolean @default(true)
 
-  screen      Screen       @relation(fields: [screenId], references: [id], onDelete: Cascade)
-  cardColors  CardColor[]
+  screen        Screen         @relation(fields: [screenId], references: [id], onDelete: Cascade)
+  cardColors    CardColor[]
   channelColors ChannelColor[]
 }
 
@@ -389,9 +475,14 @@ model GeneralConfig {
 
   // Conexión MXP
   mxpHost                String  @default("")
+  mxpPort                Int?    // Puerto SQL Server (default 1433 si null)
   mxpUser                String  @default("")
   mxpPassword            String  @default("")
   mxpDatabase            String  @default("")
+
+  // Estado del polling
+  lastPollTime           DateTime? // Última vez que se ejecutó polling
+  lastOrderId            String?   // Último ID de orden procesado
 
   updatedAt              DateTime @updatedAt
 }

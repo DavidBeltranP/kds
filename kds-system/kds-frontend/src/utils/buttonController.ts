@@ -17,25 +17,23 @@ export class ButtonController {
   private debounceTime: number;
   private actions: ButtonAction[];
   private combos: ComboAction[];
-  private onLog: (message: string) => void;
 
   // Para secuencia de teclas (combo)
   private keySequence: { key: string; time: number }[] = [];
   private comboExecuted: boolean = false;
 
   // Para evitar que teclas de combo ejecuten acciones simples
-  private pendingComboCheck: NodeJS.Timeout | null = null;
+  private pendingComboCheck: ReturnType<typeof setTimeout> | null = null;
   private comboCheckDelay: number = 800; // Esperar 800ms para ver si llega otra tecla del combo
 
   constructor(
     actions: ButtonAction[],
     combos: ComboAction[],
-    onLog: (message: string) => void,
+    _onLog: (message: string) => void,
     debounceTime: number = 200
   ) {
     this.actions = actions;
     this.combos = combos;
-    this.onLog = onLog;
     this.debounceTime = debounceTime;
     this.setupListeners();
   }
