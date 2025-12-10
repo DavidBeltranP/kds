@@ -302,20 +302,24 @@ class MirrorKDSService {
 
     // Extraer identifier de forma más robusta:
     // 1. Primero intenta nroCheque (número de ticket/cheque)
-    // 2. Si comanda.id parece un número de orden válido (más de 3 dígitos), usarlo
-    // 3. Si no, usar el turno si existe
-    // 4. Fallback a los últimos 4 caracteres del IdOrden
+    // 2. Si comanda.orderId existe y tiene longitud útil, usarlo
+    // 3. Si comanda.id parece un número de orden válido (más de 3 dígitos), usarlo
+    // 4. Fallback a los últimos 6 caracteres del IdOrden
+    // NOTA: NO usar turno porque puede ser "1", "2", etc. y confundirse con la pantalla
     let identifier = comanda.otrosDatos?.nroCheque;
     if (!identifier) {
-      // Verificar si comanda.id es un valor útil (no solo un número pequeño como pantalla)
-      const comandaId = comanda.id;
-      if (comandaId && comandaId.length > 3) {
-        identifier = comandaId;
-      } else if (comanda.otrosDatos?.turno) {
-        identifier = String(comanda.otrosDatos.turno);
+      // Intentar orderId primero
+      if (comanda.orderId && comanda.orderId.length > 3) {
+        identifier = comanda.orderId;
       } else {
-        // Usar últimos caracteres del IdOrden como identificador visual
-        identifier = row.IdOrden.slice(-6);
+        // Verificar si comanda.id es un valor útil (no solo un número pequeño como pantalla)
+        const comandaId = comanda.id;
+        if (comandaId && comandaId.length > 3) {
+          identifier = comandaId;
+        } else {
+          // Usar últimos caracteres del IdOrden como identificador visual
+          identifier = row.IdOrden.slice(-6);
+        }
       }
     }
 
