@@ -31,8 +31,8 @@ export type ScreenStatus = 'ONLINE' | 'OFFLINE' | 'STANDBY';
 
 export interface ScreenConfig {
   id: string;
+  number: number;
   name: string;
-  ip: string;
   queueId: string;
   status: ScreenStatus;
   queue: {

@@ -378,27 +378,10 @@ export function OrderGrid() {
           totalParts={column.totalParts}
           isFirstPart={column.isFirstPart}
           isLastPart={column.isLastPart}
-          cardColors={appearance?.cardColors || []}
-          channelColors={appearance?.channelColors || []}
+          appearance={appearance || undefined}
           showIdentifier={preference?.showIdentifier ?? true}
           identifierMessage={preference?.identifierMessage || 'Orden'}
           showName={preference?.showName ?? true}
-          fontSize={appearance?.fontSize || '16px'}
-          // Props de apariencia
-          cardColor={appearance?.cardColor}
-          textColor={appearance?.textColor}
-          headerTextColor={appearance?.headerTextColor}
-          accentColor={appearance?.accentColor}
-          productFontFamily={appearance?.productFontFamily}
-          productFontSize={appearance?.productFontSize}
-          productFontWeight={appearance?.productFontWeight}
-          modifierFontFamily={appearance?.modifierFontFamily}
-          modifierFontSize={appearance?.modifierFontSize}
-          modifierFontColor={appearance?.modifierFontColor}
-          modifierFontStyle={appearance?.modifierFontStyle}
-          showTimer={appearance?.showTimer}
-          showOrderNumber={appearance?.showOrderNumber}
-          headerFontSize={appearance?.headerFontSize}
           onFinish={handleFinishOrder}
           touchEnabled={touchEnabled}
         />

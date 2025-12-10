@@ -23,8 +23,8 @@ export type ScreenStatus = 'ONLINE' | 'OFFLINE' | 'STANDBY';
 
 export interface ScreenWithConfig {
   id: string;
+  number: number;
   name: string;
-  ip: string;
   queueId: string;
   status: ScreenStatus;
   queue: {
@@ -113,6 +113,8 @@ export interface PreferenceConfig {
   showPagination: boolean;
   sourceBoxActive: boolean;
   sourceBoxMessage: string;
+  touchEnabled: boolean;
+  botoneraEnabled: boolean;
 }
 
 // ============================================
@@ -279,13 +281,11 @@ export const loginSchema = z.object({
 
 export const createScreenSchema = z.object({
   name: z.string().min(1).max(50),
-  ip: z.string().ip(),
   queueId: z.string().cuid(),
 });
 
 export const updateScreenSchema = z.object({
   name: z.string().min(1).max(50).optional(),
-  ip: z.string().ip().optional(),
   queueId: z.string().cuid().optional(),
 });
 

@@ -56,8 +56,8 @@ interface DashboardStats {
 
 interface Screen {
   id: string;
+  number: number;
   name: string;
-  ip: string;
   queueName: string;
   status: string;
   lastHeartbeat: string | null;
@@ -541,7 +541,7 @@ export const generateDashboardPDF = (
 
   const screenStatusData = screens.map(s => [
     s.name,
-    s.ip,
+    `/kds${s.number}`,
     s.queueName,
     s.status,
     s.lastHeartbeat ? new Date(s.lastHeartbeat).toLocaleTimeString() : '-',
@@ -549,7 +549,7 @@ export const generateDashboardPDF = (
 
   autoTable(doc, {
     startY: yPos,
-    head: [['Pantalla', 'IP', 'Cola', 'Estado', 'Último Heartbeat']],
+    head: [['Pantalla', 'URL', 'Cola', 'Estado', 'Último Heartbeat']],
     body: screenStatusData,
     theme: 'striped',
     headStyles: {

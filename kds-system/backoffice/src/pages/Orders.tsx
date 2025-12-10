@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Card,
   Table,
@@ -17,6 +17,7 @@ import {
   Descriptions,
   List,
   InputNumber,
+  Alert,
 } from 'antd';
 import {
   ReloadOutlined,
@@ -26,8 +27,10 @@ import {
   UndoOutlined,
   CloseCircleOutlined,
   ClearOutlined,
+  ExperimentOutlined,
 } from '@ant-design/icons';
-import { ordersApi, queuesApi, screensApi } from '../services/api';
+import { ordersApi, queuesApi, screensApi, mirrorApi } from '../services/api';
+import { useIsTestMode } from '../store/testModeStore';
 import dayjs from 'dayjs';
 
 interface OrderItem {
@@ -62,6 +65,7 @@ interface Screen {
 }
 
 export function Orders() {
+  const isTestMode = useIsTestMode();
   const [orders, setOrders] = useState<Order[]>([]);
   const [queues, setQueues] = useState<Queue[]>([]);
   const [screens, setScreens] = useState<Screen[]>([]);
@@ -84,14 +88,61 @@ export function Orders() {
     avgFinishTime: 0,
   });
 
+  // Cargar datos del mirror cuando está en modo prueba
+  const loadMirrorData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await mirrorApi.getOrders({
+        screen: filters.screenId,
+        queue: filters.queueId,
+      });
+
+      // Transformar datos del mirror al formato esperado
+      const mirrorOrders: Order[] = (data.orders || []).map((o: any) => ({
+        id: o.id,
+        externalId: o.externalId || o.id,
+        orderNumber: o.identifier,
+        status: o.status,
+        queueName: o.queue || '-',
+        screenName: o.screen || '-',
+        items: (o.items || []).map((item: any) => ({
+          id: item.id || String(Math.random()),
+          name: item.name,
+          quantity: item.quantity,
+          modifiers: item.subitems?.map((s: any) => s.name) || [],
+        })),
+        createdAt: o.createdAt,
+        finishedAt: null,
+        finishTime: null,
+        metadata: {},
+      }));
+
+      setOrders(mirrorOrders);
+      setStats({
+        pending: mirrorOrders.filter((o) => o.status === 'PENDING').length,
+        inProgress: 0,
+        finishedToday: 0,
+        avgFinishTime: 0,
+      });
+    } catch (error) {
+      message.error('Error cargando ordenes del mirror');
+    } finally {
+      setLoading(false);
+    }
+  }, [filters.screenId, filters.queueId]);
+
   useEffect(() => {
     loadQueues();
     loadScreens();
   }, []);
 
   useEffect(() => {
-    loadData();
-  }, [filters]);
+    if (isTestMode) {
+      loadMirrorData();
+    } else {
+      loadData();
+    }
+  }, [filters, isTestMode, loadMirrorData]);
 
   const loadQueues = async () => {
     try {
@@ -293,8 +344,33 @@ export function Orders() {
     },
   ];
 
+  // Función para refrescar (usa mirror o local según modo)
+  const handleRefresh = () => {
+    if (isTestMode) {
+      loadMirrorData();
+    } else {
+      loadData();
+    }
+  };
+
   return (
     <div>
+      {/* Alert de modo prueba */}
+      {isTestMode && (
+        <Alert
+          message={
+            <Space>
+              <ExperimentOutlined />
+              <strong>MODO PRUEBA ACTIVO</strong> - Mostrando datos reales del SQL Server del local (solo lectura)
+            </Space>
+          }
+          type="warning"
+          showIcon={false}
+          style={{ marginBottom: 16 }}
+          banner
+        />
+      )}
+
       {/* Stats */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={12} sm={12} md={6}>
@@ -399,7 +475,7 @@ export function Orders() {
           {/* Acciones */}
           <Col xs={24} lg={7}>
             <Space wrap style={{ width: '100%', justifyContent: 'flex-end' }}>
-              <Button icon={<ReloadOutlined />} onClick={loadData}>
+              <Button icon={<ReloadOutlined />} onClick={handleRefresh}>
                 Actualizar
               </Button>
               <Button

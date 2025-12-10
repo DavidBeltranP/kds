@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Order, OrderItem, CardColor, ChannelColor } from '../../types';
+import type { Order, OrderItem, CardColor, ChannelColor, AppearanceConfig } from '../../types';
 import { getElapsedTime, getColorForTime } from '../../utils/timeUtils';
 
 interface OrderCardProps {
@@ -10,27 +10,14 @@ interface OrderCardProps {
   totalParts: number;
   isFirstPart: boolean;
   isLastPart: boolean;
-  cardColors: CardColor[];
-  channelColors: ChannelColor[];
-  showIdentifier: boolean;
-  identifierMessage: string;
-  showName: boolean;
-  fontSize: string;
-  // Props de apariencia
-  cardColor?: string;
-  textColor?: string;
-  headerTextColor?: string;
-  accentColor?: string;
-  productFontFamily?: string;
-  productFontSize?: string;
-  productFontWeight?: string;
-  modifierFontFamily?: string;
-  modifierFontSize?: string;
-  modifierFontColor?: string;
-  modifierFontStyle?: string;
-  showTimer?: boolean;
-  showOrderNumber?: boolean;
-  headerFontSize?: string;
+  // Appearance config completa (preferido)
+  appearance?: Partial<AppearanceConfig>;
+  // Props legacy (para compatibilidad)
+  cardColors?: CardColor[];
+  channelColors?: ChannelColor[];
+  showIdentifier?: boolean;
+  identifierMessage?: string;
+  showName?: boolean;
   // Touch/Click handler
   onFinish?: (orderId: string) => void;
   touchEnabled?: boolean;
@@ -47,18 +34,29 @@ const defaultChannelColors: Record<string, string> = {
   'app': '#bd10e0',
 };
 
-const getFontSize = (size?: string, type: 'header' | 'product' | 'modifier' = 'product'): string => {
+const getFontSize = (size?: string, type: 'header' | 'product' | 'modifier' | 'timer' | 'client' | 'quantity' | 'subitem' | 'notes' | 'channel' = 'product'): string => {
   const sizes: Record<string, Record<string, string>> = {
-    header: { small: '12px', medium: '14px', large: '16px', xlarge: '20px', xxlarge: '24px' },
-    product: { small: '12px', medium: '14px', large: '16px', xlarge: '20px', xxlarge: '24px' },
-    modifier: { xsmall: '10px', small: '11px', medium: '12px', large: '14px', xlarge: '16px', xxlarge: '18px' },
+    header: { xsmall: '10px', small: '12px', medium: '14px', large: '16px', xlarge: '20px', xxlarge: '24px' },
+    timer: { xsmall: '10px', small: '12px', medium: '14px', large: '16px', xlarge: '20px', xxlarge: '24px' },
+    client: { xsmall: '10px', small: '11px', medium: '12px', large: '14px', xlarge: '16px', xxlarge: '18px' },
+    quantity: { xsmall: '10px', small: '12px', medium: '14px', large: '16px', xlarge: '20px', xxlarge: '24px' },
+    product: { xsmall: '10px', small: '12px', medium: '14px', large: '16px', xlarge: '20px', xxlarge: '24px' },
+    subitem: { xsmall: '9px', small: '10px', medium: '11px', large: '12px', xlarge: '14px', xxlarge: '16px' },
+    modifier: { xsmall: '9px', small: '10px', medium: '11px', large: '12px', xlarge: '14px', xxlarge: '16px' },
+    notes: { xsmall: '9px', small: '10px', medium: '11px', large: '12px', xlarge: '14px', xxlarge: '16px' },
+    channel: { xsmall: '9px', small: '10px', medium: '11px', large: '12px', xlarge: '14px', xxlarge: '16px' },
   };
-  return sizes[type][size || 'medium'] || sizes[type].medium;
+  return sizes[type]?.[size || 'medium'] || sizes[type]?.medium || '14px';
 };
 
 const getFontWeight = (weight?: string): number => {
   const weights: Record<string, number> = { normal: 400, medium: 500, semibold: 600, bold: 700 };
   return weights[weight || 'bold'] || 700;
+};
+
+const getFontStyle = (style?: string): React.CSSProperties['fontStyle'] => {
+  if (style === 'italic') return 'italic';
+  return 'normal';
 };
 
 // Clip-path para efecto de papel rasgado en el borde inferior (primera parte)
@@ -76,31 +74,28 @@ const getClipPathBoth = () =>
 export function OrderCard({
   order,
   items,
-  index,
+  index: _index,
   partNumber: _partNumber,
   totalParts,
   isFirstPart,
   isLastPart,
-  cardColors,
-  channelColors,
-  showIdentifier,
-  identifierMessage,
-  showName,
-  cardColor = '#ffffff',
-  textColor = '#1a1a2e',
-  productFontFamily = 'Inter, sans-serif',
-  productFontSize = 'medium',
-  productFontWeight = 'bold',
-  modifierFontFamily = 'Inter, sans-serif',
-  modifierFontSize = 'small',
-  modifierFontColor = '#888888',
-  modifierFontStyle = 'normal',
-  showTimer = true,
-  showOrderNumber = true,
-  headerFontSize = 'medium',
+  appearance = {},
+  cardColors: legacyCardColors,
+  channelColors: legacyChannelColors,
+  showIdentifier = true,
+  identifierMessage = 'Orden',
+  showName = true,
   onFinish,
   touchEnabled = false,
 }: OrderCardProps) {
+  // Obtener cardColors y channelColors de appearance o legacy props
+  const cardColors = appearance.cardColors || legacyCardColors || [];
+  const channelColors = appearance.channelColors || legacyChannelColors || [];
+
+  // Valores por defecto para colores de tarjeta
+  const cardColor = appearance.cardColor || '#ffffff';
+  const textColor = appearance.textColor || '#1a1a2e';
+
   const [elapsedTime, setElapsedTime] = useState(getElapsedTime(order.createdAt));
   const [timeColor, setTimeColor] = useState(() =>
     getColorForTime(order.createdAt, cardColors)
@@ -116,16 +111,92 @@ export function OrderCard({
     return () => clearInterval(interval);
   }, [order.createdAt, cardColors]);
 
+  // Extraer configuraciones de appearance o usar valores default
+  const config = {
+    // Header
+    headerFontFamily: appearance.headerFontFamily || 'Inter, sans-serif',
+    headerFontSize: appearance.headerFontSize || 'medium',
+    headerFontWeight: appearance.headerFontWeight || 'bold',
+    headerFontStyle: appearance.headerFontStyle || 'normal',
+    headerTextColor: appearance.headerTextColorCustom || '#ffffff',
+    showHeader: appearance.showHeader !== false,
+    showOrderNumber: appearance.showOrderNumber !== false,
+
+    // Timer
+    timerFontFamily: appearance.timerFontFamily || 'monospace',
+    timerFontSize: appearance.timerFontSize || 'medium',
+    timerFontWeight: appearance.timerFontWeight || 'bold',
+    timerFontStyle: appearance.timerFontStyle || 'normal',
+    timerTextColor: appearance.timerTextColor || '#ffffff',
+    showTimer: appearance.showTimer !== false,
+
+    // Client
+    clientFontFamily: appearance.clientFontFamily || 'Inter, sans-serif',
+    clientFontSize: appearance.clientFontSize || 'small',
+    clientFontWeight: appearance.clientFontWeight || 'normal',
+    clientFontStyle: appearance.clientFontStyle || 'normal',
+    clientTextColor: appearance.clientTextColor || '#ffffff',
+    showClient: appearance.showClient !== false,
+
+    // Quantity
+    quantityFontFamily: appearance.quantityFontFamily || 'Inter, sans-serif',
+    quantityFontSize: appearance.quantityFontSize || 'medium',
+    quantityFontWeight: appearance.quantityFontWeight || 'bold',
+    quantityFontStyle: appearance.quantityFontStyle || 'normal',
+    quantityTextColor: appearance.quantityTextColor || '', // Vacío = usa SLA color
+    showQuantity: appearance.showQuantity !== false,
+
+    // Product
+    productFontFamily: appearance.productFontFamily || 'Inter, sans-serif',
+    productFontSize: appearance.productFontSize || 'medium',
+    productFontWeight: appearance.productFontWeight || 'bold',
+    productFontStyle: appearance.productFontStyle || 'normal',
+    productTextColor: appearance.productTextColor || textColor,
+    productUppercase: appearance.productUppercase !== false,
+
+    // Subitem
+    subitemFontFamily: appearance.subitemFontFamily || 'Inter, sans-serif',
+    subitemFontSize: appearance.subitemFontSize || 'small',
+    subitemFontWeight: appearance.subitemFontWeight || 'normal',
+    subitemFontStyle: appearance.subitemFontStyle || 'normal',
+    subitemTextColor: appearance.subitemTextColor || '#333333',
+    subitemIndent: appearance.subitemIndent || 24,
+    showSubitems: appearance.showSubitems !== false,
+
+    // Modifier (notas de contenido)
+    modifierFontFamily: appearance.modifierFontFamily || 'Inter, sans-serif',
+    modifierFontSize: appearance.modifierFontSize || 'small',
+    modifierFontWeight: appearance.modifierFontWeight || 'normal',
+    modifierFontStyle: appearance.modifierFontStyle || 'italic',
+    modifierTextColor: appearance.modifierFontColor || '#666666',
+    modifierIndent: appearance.modifierIndent || 24,
+    showModifiers: appearance.showModifiers !== false,
+
+    // Notes
+    notesFontFamily: appearance.notesFontFamily || 'Inter, sans-serif',
+    notesFontSize: appearance.notesFontSize || 'small',
+    notesFontWeight: appearance.notesFontWeight || 'normal',
+    notesFontStyle: appearance.notesFontStyle || 'italic',
+    notesTextColor: appearance.notesTextColor || '#ff9800',
+    notesIndent: appearance.notesIndent || 24,
+    showNotes: appearance.showNotes !== false,
+
+    // Channel
+    channelFontFamily: appearance.channelFontFamily || 'Inter, sans-serif',
+    channelFontSize: appearance.channelFontSize || 'small',
+    channelFontWeight: appearance.channelFontWeight || 'bold',
+    channelFontStyle: appearance.channelFontStyle || 'normal',
+    channelTextColor: appearance.channelTextColor || '#ffffff',
+    channelUppercase: appearance.channelUppercase !== false,
+    showChannel: appearance.showChannel !== false,
+  };
+
   // Obtener color del canal
   const channelKey = order.channel.toLowerCase();
   const channelColor =
     channelColors.find(
       (c) => c.channel.toLowerCase() === channelKey
     )?.color || defaultChannelColors[channelKey] || '#4a90e2';
-
-  // Tecla para finalizar (solo en primera parte)
-  // Mostramos los equivalentes visuales de la botonera (1, 2, 3, 4, 5)
-  const finishKey = isFirstPart ? (['1', '2', '3', '4', '5'][index] || '') : '';
 
   const isSplit = totalParts > 1;
 
@@ -134,12 +205,11 @@ export function OrderCard({
     if (!isSplit) return undefined;
     if (isFirstPart && !isLastPart) return getClipPathBottom();
     if (isLastPart && !isFirstPart) return getClipPathTop();
-    // Partes intermedias (ni primera ni última) - rasgado en ambos bordes
     if (!isFirstPart && !isLastPart) return getClipPathBoth();
     return undefined;
   };
 
-  // Handler para touch/click - solo en la primera parte de la orden
+  // Handler para touch/click
   const handleClick = () => {
     if (touchEnabled && onFinish && isFirstPart) {
       onFinish(order.id);
@@ -183,7 +253,7 @@ export function OrderCard({
         }}
       >
         {/* Header - Solo en primera parte */}
-        {isFirstPart && (
+        {isFirstPart && config.showHeader && (
           <>
             {/* Número de orden y tiempo */}
             <div
@@ -198,20 +268,23 @@ export function OrderCard({
             >
               <span
                 style={{
-                  color: '#fff',
-                  fontWeight: 'bold',
-                  fontSize: getFontSize(headerFontSize, 'header'),
+                  color: config.headerTextColor,
+                  fontFamily: config.headerFontFamily,
+                  fontWeight: getFontWeight(config.headerFontWeight),
+                  fontStyle: getFontStyle(config.headerFontStyle),
+                  fontSize: getFontSize(config.headerFontSize, 'header'),
                 }}
               >
-                {showOrderNumber && showIdentifier && `${identifierMessage} #${order.identifier}`}
+                {config.showOrderNumber && showIdentifier && `${identifierMessage} #${order.identifier}`}
               </span>
-              {showTimer && (
+              {config.showTimer && (
                 <span
                   style={{
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    fontSize: getFontSize(headerFontSize, 'header'),
-                    fontFamily: 'monospace',
+                    color: config.timerTextColor,
+                    fontFamily: config.timerFontFamily,
+                    fontWeight: getFontWeight(config.timerFontWeight),
+                    fontStyle: getFontStyle(config.timerFontStyle),
+                    fontSize: getFontSize(config.timerFontSize, 'timer'),
                   }}
                 >
                   {elapsedTime.formatted}
@@ -220,7 +293,7 @@ export function OrderCard({
             </div>
 
             {/* Cliente */}
-            {showName && order.customerName && (
+            {showName && order.customerName && config.showClient && (
               <div
                 style={{
                   background: timeColor.color,
@@ -228,13 +301,19 @@ export function OrderCard({
                   flexShrink: 0,
                 }}
               >
-                <span style={{ color: '#fff', fontSize: '12px' }}>
+                <span
+                  style={{
+                    color: config.clientTextColor,
+                    fontFamily: config.clientFontFamily,
+                    fontWeight: getFontWeight(config.clientFontWeight),
+                    fontStyle: getFontStyle(config.clientFontStyle),
+                    fontSize: getFontSize(config.clientFontSize, 'client'),
+                  }}
+                >
                   {order.customerName}
                 </span>
               </div>
             )}
-
-{/* Barra de canal removida - ahora está en el footer */}
           </>
         )}
 
@@ -255,34 +334,65 @@ export function OrderCard({
                 padding: '4px 0',
               }}
             >
+              {/* Cantidad y Producto */}
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                {/* Cantidad (5x) */}
+                {config.showQuantity && (
+                  <span
+                    style={{
+                      color: config.quantityTextColor || timeColor.color,
+                      fontFamily: config.quantityFontFamily,
+                      fontWeight: getFontWeight(config.quantityFontWeight),
+                      fontStyle: getFontStyle(config.quantityFontStyle),
+                      fontSize: getFontSize(config.quantityFontSize, 'quantity'),
+                      flexShrink: 0,
+                    }}
+                  >
+                    {item.quantity}x
+                  </span>
+                )}
+                {/* Nombre del producto */}
                 <span
                   style={{
-                    color: timeColor.color,
-                    fontSize: getFontSize(productFontSize, 'product'),
-                    fontWeight: 'bold',
-                    flexShrink: 0,
-                  }}
-                >
-                  {item.quantity}x
-                </span>
-                <span
-                  style={{
-                    color: textColor,
-                    fontSize: getFontSize(productFontSize, 'product'),
-                    fontFamily: productFontFamily,
-                    fontWeight: getFontWeight(productFontWeight),
+                    color: config.productTextColor || textColor,
+                    fontFamily: config.productFontFamily,
+                    fontWeight: getFontWeight(config.productFontWeight),
+                    fontStyle: getFontStyle(config.productFontStyle),
+                    fontSize: getFontSize(config.productFontSize, 'product'),
                     lineHeight: 1.3,
-                    textTransform: 'uppercase',
+                    textTransform: config.productUppercase ? 'uppercase' : 'none',
                   }}
                 >
                   {item.name}
                 </span>
               </div>
-              {item.modifier && (
+
+              {/* Subitems (1x Pepsi, 1x Crispy) - del campo subitems si existe */}
+              {config.showSubitems && 'subitems' in item && Array.isArray((item as unknown as { subitems: Array<{ name: string; quantity: number }> }).subitems) && (
+                <div style={{ paddingLeft: `${config.subitemIndent}px`, marginTop: '2px' }}>
+                  {((item as unknown as { subitems: Array<{ name: string; quantity: number }> }).subitems).map((subitem, subIndex) => (
+                    <div
+                      key={subIndex}
+                      style={{
+                        fontFamily: config.subitemFontFamily,
+                        fontWeight: getFontWeight(config.subitemFontWeight),
+                        fontStyle: getFontStyle(config.subitemFontStyle),
+                        fontSize: getFontSize(config.subitemFontSize, 'subitem'),
+                        color: config.subitemTextColor,
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {subitem.quantity}x {subitem.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Modificadores/Contenido (notas del producto) */}
+              {config.showModifiers && item.modifier && (
                 <div
                   style={{
-                    paddingLeft: '24px',
+                    paddingLeft: `${config.modifierIndent}px`,
                     marginTop: '2px',
                   }}
                 >
@@ -290,10 +400,11 @@ export function OrderCard({
                     <div
                       key={modIndex}
                       style={{
-                        fontSize: getFontSize(modifierFontSize, 'modifier'),
-                        fontFamily: modifierFontFamily,
-                        fontStyle: modifierFontStyle as React.CSSProperties['fontStyle'],
-                        color: modifierFontColor,
+                        fontFamily: config.modifierFontFamily,
+                        fontWeight: getFontWeight(config.modifierFontWeight),
+                        fontStyle: getFontStyle(config.modifierFontStyle),
+                        fontSize: getFontSize(config.modifierFontSize, 'modifier'),
+                        color: config.modifierTextColor,
                         lineHeight: 1.4,
                       }}
                     >
@@ -302,14 +413,18 @@ export function OrderCard({
                   ))}
                 </div>
               )}
-              {item.notes && (
+
+              {/* Notas especiales */}
+              {config.showNotes && item.notes && (
                 <div
                   style={{
-                    fontSize: getFontSize(modifierFontSize, 'modifier'),
-                    fontStyle: 'italic',
-                    color: '#ff9800',
-                    paddingLeft: '24px',
+                    paddingLeft: `${config.notesIndent}px`,
                     marginTop: '2px',
+                    fontFamily: config.notesFontFamily,
+                    fontWeight: getFontWeight(config.notesFontWeight),
+                    fontStyle: getFontStyle(config.notesFontStyle),
+                    fontSize: getFontSize(config.notesFontSize, 'notes'),
+                    color: config.notesTextColor,
                   }}
                 >
                   * {item.notes}
@@ -319,60 +434,37 @@ export function OrderCard({
           ))}
         </div>
 
-        {/* Footer con canal - Solo en última parte de split */}
-        {isLastPart && isSplit && (
+        {/* Footer con canal */}
+        {isLastPart && config.showChannel && (
           <div
             style={{
               display: 'flex',
               flexShrink: 0,
             }}
           >
-            {/* Canal */}
             <div
               style={{
                 flex: 1,
                 background: channelColor,
                 padding: '8px 12px',
-                color: '#fff',
-                fontWeight: 'bold',
-                fontSize: '11px',
-                textTransform: 'uppercase',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '6px',
               }}
             >
-              <span>{order.channel}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Footer con canal - Solo si NO es split */}
-        {isLastPart && !isSplit && (
-          <div
-            style={{
-              display: 'flex',
-              flexShrink: 0,
-            }}
-          >
-            {/* Canal */}
-            <div
-              style={{
-                flex: 1,
-                background: channelColor,
-                padding: '8px 12px',
-                color: '#fff',
-                fontWeight: 'bold',
-                fontSize: '11px',
-                textTransform: 'uppercase',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-              }}
-            >
-              <span>{order.channel}</span>
+              <span
+                style={{
+                  color: config.channelTextColor,
+                  fontFamily: config.channelFontFamily,
+                  fontWeight: getFontWeight(config.channelFontWeight),
+                  fontStyle: getFontStyle(config.channelFontStyle),
+                  fontSize: getFontSize(config.channelFontSize, 'channel'),
+                  textTransform: config.channelUppercase ? 'uppercase' : 'none',
+                }}
+              >
+                {order.channel}
+              </span>
             </div>
           </div>
         )}

@@ -10,9 +10,14 @@ export function getElapsedTime(createdAt: string | Date): {
   const now = new Date();
   const diff = now.getTime() - created.getTime();
 
-  const totalSeconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
+  // Si la diferencia es negativa (fecha futura) o muy grande (más de 24 horas),
+  // probablemente hay un problema de zona horaria o datos inválidos
+  const totalSeconds = Math.max(0, Math.floor(diff / 1000));
+
+  // Limitar a un máximo razonable (99:59) para evitar valores absurdos
+  const cappedSeconds = Math.min(totalSeconds, 5999);
+  const minutes = Math.floor(cappedSeconds / 60);
+  const seconds = cappedSeconds % 60;
 
   const formatted = `${minutes.toString().padStart(2, '0')}:${seconds
     .toString()

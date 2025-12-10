@@ -59,7 +59,12 @@
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWl4a2ExejQwMDAwMTF5MTVldzBmcnZyIiwiZW1haWwiOiJhZG1pbkBrZmMuY29tLmVjIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzY1MzE1MTExLCJleHAiOjE3NjUzMTYwMTF9.krTNwQ4umspFnlAvU6MXdVc3vYGj-RN8M5tRTcY_XLM\")",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWl4a2ExejQwMDAwMTF5MTVldzBmcnZyIiwiZW1haWwiOiJhZG1pbkBrZmMuY29tLmVjIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzY1MzE1NDM1LCJleHAiOjE3NjU0MDE4MzV9.Mpp6RXgyWCLfGvlFQRA-mVpr9BF1U6s-wUfviFkxyMU\")",
       "Bash(npx prisma db execute:*)",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWl4a2ExejQwMDAwMTF5MTVldzBmcnZyIiwiZW1haWwiOiJhZG1pbkBrZmMuY29tLmVjIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzY1MzE3NDQ3LCJleHAiOjE3NjU0MDM4NDd9.geGGTT-3mDJ7e2DMh6JCbs6XTRB40j9lMIt3-_zXee8\")"
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWl4a2ExejQwMDAwMTF5MTVldzBmcnZyIiwiZW1haWwiOiJhZG1pbkBrZmMuY29tLmVjIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzY1MzE3NDQ3LCJleHAiOjE3NjU0MDM4NDd9.geGGTT-3mDJ7e2DMh6JCbs6XTRB40j9lMIt3-_zXee8\")",
+      "Bash(npx prisma:*)",
+      "Bash(cmd //c \"taskkill /F /IM node.exe\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWl4a2ExejQwMDAwMTF5MTVldzBmcnZyIiwiZW1haWwiOiJhZG1pbkBrZmMuY29tLmVjIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzY1Mzg0ODM3LCJleHAiOjE3NjU0NzEyMzd9.i5zbOwtXPzd35yu37Ayllauhuxhb_hnd-SflRMyuQ4A\")",
+      "Bash(cmd //c \"taskkill /F /PID 45472\")",
+      "Bash(cmd //c \"taskkill /F /PID 4168 && taskkill /F /PID 49656 && taskkill /F /PID 8440 && taskkill /F /PID 30496 && taskkill /F /PID 6404\")"
     ],
     "deny": [],
     "ask": []

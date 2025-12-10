@@ -49,7 +49,7 @@ export const getQueue = asyncHandler(async (req: Request, res: Response) => {
         select: {
           id: true,
           name: true,
-          ip: true,
+          number: true,
           status: true,
         },
       },

@@ -49,7 +49,6 @@ export const createScreen = asyncHandler(
     const screen = await prisma.screen.create({
       data: {
         name: data.name,
-        ip: data.ip,
         queueId: data.queueId,
         // Crear configuraciones por defecto
         appearance: {
@@ -486,6 +485,52 @@ export const testPrinter = asyncHandler(
     }
 
     res.json({ message: 'Printer connection successful', success: true });
+  }
+);
+
+/**
+ * GET /api/screens/by-number/:number
+ * Obtener pantalla por número (endpoint público para KDS frontend)
+ * Devuelve screenId y apiKey necesarios para conectar
+ */
+export const getScreenByNumber = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { number } = req.params;
+    const screenNumber = parseInt(number, 10);
+
+    if (isNaN(screenNumber) || screenNumber < 1) {
+      throw new AppError(400, 'Invalid screen number');
+    }
+
+    const screen = await prisma.screen.findUnique({
+      where: { number: screenNumber },
+      select: {
+        id: true,
+        number: true,
+        name: true,
+        apiKey: true,
+        status: true,
+        queue: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!screen) {
+      throw new AppError(404, `Screen ${screenNumber} not found`);
+    }
+
+    res.json({
+      screenId: screen.id,
+      screenNumber: screen.number,
+      screenName: screen.name,
+      apiKey: screen.apiKey,
+      status: screen.status,
+      queue: screen.queue,
+    });
   }
 );
 

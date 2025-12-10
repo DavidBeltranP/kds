@@ -12,7 +12,7 @@ import { Orders } from './pages/Orders';
 import { Appearance } from './pages/Appearance';
 import { Settings } from './pages/Settings';
 import { Users } from './pages/Users';
-import Mirror from './pages/Mirror';
+import { TestScreen } from './pages/TestScreen';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -146,15 +146,16 @@ function App() {
                 </RoleRoute>
               }
             />
-            <Route
-              path="mirror"
-              element={
-                <RoleRoute allowedRoles={['ADMIN']}>
-                  <Mirror />
-                </RoleRoute>
-              }
-            />
           </Route>
+          {/* Ruta fullscreen para probar pantalla KDS con datos reales */}
+          <Route
+            path="/test-screen/:screenId"
+            element={
+              <PrivateRoute>
+                <TestScreen />
+              </PrivateRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

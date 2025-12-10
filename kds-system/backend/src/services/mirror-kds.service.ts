@@ -197,7 +197,7 @@ class MirrorKDSService {
 
       const request = pool.request();
       if (screenFilter) {
-        request.input('screenFilter', sql.VarChar, screenFilter);
+        request.input('screenFilter', screenFilter);
       }
 
       const result = await request.query<{
@@ -300,10 +300,29 @@ class MirrorKDSService {
       }
     }
 
+    // Extraer identifier de forma más robusta:
+    // 1. Primero intenta nroCheque (número de ticket/cheque)
+    // 2. Si comanda.id parece un número de orden válido (más de 3 dígitos), usarlo
+    // 3. Si no, usar el turno si existe
+    // 4. Fallback a los últimos 4 caracteres del IdOrden
+    let identifier = comanda.otrosDatos?.nroCheque;
+    if (!identifier) {
+      // Verificar si comanda.id es un valor útil (no solo un número pequeño como pantalla)
+      const comandaId = comanda.id;
+      if (comandaId && comandaId.length > 3) {
+        identifier = comandaId;
+      } else if (comanda.otrosDatos?.turno) {
+        identifier = String(comanda.otrosDatos.turno);
+      } else {
+        // Usar últimos caracteres del IdOrden como identificador visual
+        identifier = row.IdOrden.slice(-6);
+      }
+    }
+
     return {
       id: row.IdOrden,
       externalId: comanda.orderId || row.IdOrden,
-      identifier: comanda.otrosDatos?.nroCheque || comanda.id || row.IdOrden.substring(0, 8),
+      identifier,
       channel: comanda.channel?.name || 'Local',
       customerName: comanda.customer?.name || comanda.otrosDatos?.llamarPor,
       status: 'PENDING',

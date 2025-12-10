@@ -144,13 +144,17 @@ export class ApiTicketService {
   }
 
   /**
-   * Obtiene comandas para una pantalla por IP (compatible con endpoint POST /comandas del sistema anterior)
+   * Obtiene comandas para una pantalla por número o ID
+   * (compatible con endpoint POST /comandas del sistema anterior)
    */
-  async getCommandsForScreen(ip: string, userActions?: string[]): Promise<string> {
+  async getCommandsForScreen(screenIdentifier: string, userActions?: string[]): Promise<string> {
     try {
-      // Buscar pantalla por IP
+      // Intentar buscar por número de pantalla (si es numérico) o por ID
+      const screenNumber = parseInt(screenIdentifier, 10);
       const screen = await prisma.screen.findFirst({
-        where: { ip },
+        where: isNaN(screenNumber)
+          ? { id: screenIdentifier }
+          : { number: screenNumber },
         include: {
           queue: true,
           appearance: true,
@@ -159,7 +163,7 @@ export class ApiTicketService {
       });
 
       if (!screen) {
-        logger.warn(`[API-TICKET] Pantalla no encontrada para IP: ${ip}`);
+        logger.warn(`[API-TICKET] Pantalla no encontrada: ${screenIdentifier}`);
         return JSON.stringify({ comandas: [], counters: [] });
       }
 
@@ -193,7 +197,7 @@ export class ApiTicketService {
       });
 
     } catch (error) {
-      logger.error(`[API-TICKET] Error obteniendo comandas para IP ${ip}:`, { error });
+      logger.error(`[API-TICKET] Error obteniendo comandas para pantalla ${screenIdentifier}:`, { error });
       return JSON.stringify({ comandas: [], counters: [] });
     }
   }

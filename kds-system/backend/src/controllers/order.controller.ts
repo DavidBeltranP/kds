@@ -93,7 +93,7 @@ export const getOrder = asyncHandler(async (req: Request, res: Response) => {
     include: {
       items: true,
       screen: {
-        select: { name: true, ip: true },
+        select: { name: true, number: true },
       },
     },
   });

@@ -90,7 +90,7 @@ export class ScreenService {
   async getActiveScreensForQueue(queueId: string): Promise<string[]> {
     const screens = await prisma.screen.findMany({
       where: { queueId },
-      select: { id: true, ip: true },
+      select: { id: true, number: true },
     });
 
     const activeScreens: string[] = [];
@@ -102,7 +102,7 @@ export class ScreenService {
       // Solo incluir si está vivo y no en standby
       if (isAlive && status !== 'STANDBY') {
         activeScreens.push(screen.id);
-        screenLogger.debug(`Pantalla activa: ${screen.ip}`);
+        screenLogger.debug(`Pantalla activa: KDS${screen.number}`);
       }
     }
 
@@ -151,8 +151,8 @@ export class ScreenService {
     // Transformar a formato esperado
     const config: ScreenWithConfig = {
       id: screen.id,
+      number: screen.number,
       name: screen.name,
-      ip: screen.ip,
       queueId: screen.queueId,
       status: screen.status as ScreenStatus,
       queue: {
@@ -283,8 +283,8 @@ export class ScreenService {
   async getAllScreensWithStatus(): Promise<
     Array<{
       id: string;
+      number: number;
       name: string;
-      ip: string;
       queueName: string;
       status: ScreenStatus;
       lastHeartbeat: Date | null;
@@ -320,8 +320,8 @@ export class ScreenService {
 
       result.push({
         id: screen.id,
+        number: screen.number,
         name: screen.name,
-        ip: screen.ip,
         queueName: screen.queue.name,
         status,
         lastHeartbeat: screen.heartbeats[0]?.timestamp || null,

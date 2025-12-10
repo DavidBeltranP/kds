@@ -24,11 +24,19 @@ interface Stats {
 
 interface Screen {
   id: string;
+  number: number;
   name: string;
-  ip: string;
   queueName: string;
   status: string;
   lastHeartbeat: string | null;
+}
+
+interface OrderHighlight {
+  id: string;
+  identifier: string;
+  channel: string;
+  finishTime: number;
+  items: { name: string; quantity: number; modifier?: string }[];
 }
 
 interface DashboardStats {
@@ -43,6 +51,8 @@ interface DashboardStats {
     minFinishTime: number;
     maxFinishTime: number;
   };
+  fastestOrder: OrderHighlight | null;
+  slowestOrder: OrderHighlight | null;
   byScreen: Array<{
     screenId: string;
     screenName: string;

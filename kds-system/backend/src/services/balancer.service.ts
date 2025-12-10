@@ -3,6 +3,7 @@ import { redis, REDIS_KEYS } from '../config/redis';
 import { Order, Queue } from '../types';
 import { balancerLogger } from '../utils/logger';
 import { screenService } from './screen.service';
+import { mirrorKDSService, MirrorOrder } from './mirror-kds.service';
 
 interface BalanceResult {
   screenId: string;
@@ -167,8 +168,15 @@ export class BalancerService {
 
   /**
    * Obtiene órdenes asignadas a una pantalla
+   * Si el Mirror está conectado, obtiene órdenes del KDS2 remoto
    */
   async getOrdersForScreen(screenId: string): Promise<Order[]> {
+    // Si el Mirror está conectado, obtener órdenes del KDS2 remoto
+    if (mirrorKDSService.getConnectionStatus()) {
+      return this.getOrdersFromMirror(screenId);
+    }
+
+    // Si no hay Mirror, obtener de la BD local
     const orders = await prisma.order.findMany({
       where: {
         screenId,
@@ -200,6 +208,51 @@ export class BalancerService {
         modifier: item.modifier || undefined,
       })),
     }));
+  }
+
+  /**
+   * Obtiene órdenes del Mirror (KDS2 remoto) para una pantalla local
+   */
+  private async getOrdersFromMirror(screenId: string): Promise<Order[]> {
+    try {
+      // Obtener info de la pantalla local para mapear con el Mirror
+      const screen = await prisma.screen.findUnique({
+        where: { id: screenId },
+        select: { name: true, number: true },
+      });
+
+      if (!screen) return [];
+
+      // Mapeo: KDS1 → Pantalla1, KDS2 → Pantalla2, etc.
+      // O usar el número directamente
+      const mirrorScreenName = `Pantalla${screen.number}`;
+
+      // Obtener órdenes del Mirror filtrando por la pantalla remota
+      const mirrorOrders = await mirrorKDSService.getOrdersOnScreen(mirrorScreenName);
+
+      // Convertir MirrorOrder a Order
+      return mirrorOrders.map((mo: MirrorOrder) => ({
+        id: mo.id,
+        externalId: mo.externalId,
+        screenId: screenId,
+        channel: mo.channel,
+        customerName: mo.customerName,
+        identifier: mo.identifier,
+        status: mo.status as Order['status'],
+        createdAt: mo.createdAt,
+        finishedAt: undefined,
+        items: mo.items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          notes: item.notes,
+          modifier: item.subitems?.map(s => `${s.quantity}x ${s.name}`).join(', '),
+        })),
+      }));
+    } catch (error) {
+      balancerLogger.error('Error getting orders from Mirror:', { error });
+      return [];
+    }
   }
 
   /**

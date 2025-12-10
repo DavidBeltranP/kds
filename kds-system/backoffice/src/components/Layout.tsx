@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout as AntLayout, Menu, Button, Avatar, Dropdown, theme } from 'antd';
+import { Layout as AntLayout, Menu, Button, Avatar, Dropdown, theme, Switch, Tooltip, Space, Badge, Modal, Form, Input, InputNumber, message } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   DashboardOutlined,
@@ -14,22 +14,80 @@ import {
   MenuUnfoldOutlined,
   OrderedListOutlined,
   TeamOutlined,
-  EyeOutlined,
+  ApiOutlined,
+  DisconnectOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
+import { useTestModeStore } from '../store/testModeStore';
 
 const { Header, Sider, Content } = AntLayout;
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [configModalOpen, setConfigModalOpen] = useState(false);
+  const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const { token } = theme.useToken();
 
+  const {
+    isTestMode,
+    isConnected,
+    isConnecting,
+    savedConnection,
+    connectionError,
+    enableTestMode,
+    disableTestMode,
+    connect,
+  } = useTestModeStore();
+
   const isAdmin = user?.role === 'ADMIN';
   const isOperator = user?.role === 'OPERATOR';
   const isViewer = user?.role === 'VIEWER';
+
+  // Manejar toggle de modo prueba
+  const handleTestModeToggle = async (checked: boolean) => {
+    if (checked) {
+      if (savedConnection) {
+        const success = await enableTestMode();
+        if (success) {
+          message.success('Modo prueba activado - Conectado a SQL Server del local');
+        } else {
+          message.error(connectionError || 'Error al conectar');
+          setConfigModalOpen(true);
+        }
+      } else {
+        setConfigModalOpen(true);
+      }
+    } else {
+      await disableTestMode();
+      message.info('Modo prueba desactivado');
+    }
+  };
+
+  // Guardar configuración y conectar
+  const handleConfigSave = async () => {
+    try {
+      const values = await form.validateFields();
+      const success = await connect({
+        host: values.host,
+        port: values.port || 1433,
+        user: values.user,
+        password: values.password,
+        database: values.database,
+      });
+
+      if (success) {
+        message.success('Conectado exitosamente');
+        setConfigModalOpen(false);
+      } else {
+        message.error(connectionError || 'Error al conectar');
+      }
+    } catch {
+      // Validación falló
+    }
+  };
 
   // Menu items filtrados por rol
   const menuItems: MenuProps['items'] = [
@@ -100,17 +158,6 @@ export function Layout() {
           },
         ]
       : []),
-    // Solo ADMIN puede ver Mirror
-    ...(isAdmin
-      ? [
-          { type: 'divider' as const },
-          {
-            key: '/mirror',
-            icon: <EyeOutlined />,
-            label: 'Mirror KDS',
-          },
-        ]
-      : []),
   ];
 
   const userMenuItems: MenuProps['items'] = [
@@ -178,24 +225,76 @@ export function Layout() {
         <Header
           style={{
             padding: '0 24px',
-            background: token.colorBgContainer,
+            background: isTestMode && isConnected ? '#fff7e6' : token.colorBgContainer,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
+            borderBottom: `1px solid ${isTestMode && isConnected ? '#ffd591' : token.colorBorderSecondary}`,
           }}
         >
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-          />
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <Button type="text" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Avatar size="small" icon={<UserOutlined />} />
-              {!collapsed && <span>{user?.email}</span>}
-            </Button>
-          </Dropdown>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+            />
+
+            {/* Indicador de Modo Prueba */}
+            {isTestMode && isConnected && (
+              <Badge
+                status="processing"
+                text={
+                  <span style={{ color: '#d48806', fontWeight: 'bold' }}>
+                    MODO PRUEBA ACTIVO
+                  </span>
+                }
+              />
+            )}
+          </div>
+
+          <Space size="middle">
+            {/* Toggle de Modo Prueba - Solo para ADMIN */}
+            {isAdmin && (
+              <Tooltip
+                title={
+                  isTestMode && isConnected
+                    ? 'Desactivar modo prueba'
+                    : savedConnection
+                    ? 'Activar modo prueba (datos reales del local)'
+                    : 'Configurar conexión primero'
+                }
+              >
+                <Space>
+                  <span style={{ fontSize: 12, color: token.colorTextSecondary }}>
+                    Modo Prueba
+                  </span>
+                  <Switch
+                    checked={isTestMode && isConnected}
+                    loading={isConnecting}
+                    onChange={handleTestModeToggle}
+                    checkedChildren={<ApiOutlined />}
+                    unCheckedChildren={<DisconnectOutlined />}
+                  />
+                  {!savedConnection && (
+                    <Button
+                      size="small"
+                      type="link"
+                      onClick={() => setConfigModalOpen(true)}
+                    >
+                      Configurar
+                    </Button>
+                  )}
+                </Space>
+              </Tooltip>
+            )}
+
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Button type="text" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Avatar size="small" icon={<UserOutlined />} />
+                {!collapsed && <span>{user?.email}</span>}
+              </Button>
+            </Dropdown>
+          </Space>
         </Header>
         <Content
           style={{
@@ -209,6 +308,66 @@ export function Layout() {
           <Outlet />
         </Content>
       </AntLayout>
+
+      {/* Modal de configuración de conexión */}
+      <Modal
+        title="Configurar Conexión SQL Server"
+        open={configModalOpen}
+        onCancel={() => setConfigModalOpen(false)}
+        onOk={handleConfigSave}
+        okText="Conectar"
+        cancelText="Cancelar"
+        confirmLoading={isConnecting}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            host: savedConnection?.host || '',
+            port: savedConnection?.port || 1433,
+            user: savedConnection?.user || '',
+            password: savedConnection?.password || '',
+            database: savedConnection?.database || 'KDS2',
+          }}
+        >
+          <Form.Item
+            name="host"
+            label="Host / IP"
+            rules={[{ required: true, message: 'Ingrese el host' }]}
+          >
+            <Input placeholder="192.168.1.100" />
+          </Form.Item>
+          <Form.Item name="port" label="Puerto">
+            <InputNumber style={{ width: '100%' }} min={1} max={65535} />
+          </Form.Item>
+          <Form.Item
+            name="user"
+            label="Usuario"
+            rules={[{ required: true, message: 'Ingrese el usuario' }]}
+          >
+            <Input placeholder="sa" />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="Contraseña"
+            rules={[{ required: true, message: 'Ingrese la contraseña' }]}
+          >
+            <Input.Password placeholder="********" />
+          </Form.Item>
+          <Form.Item
+            name="database"
+            label="Base de datos"
+            rules={[{ required: true, message: 'Ingrese la base de datos' }]}
+          >
+            <Input placeholder="KDS2" />
+          </Form.Item>
+        </Form>
+        {connectionError && (
+          <div style={{ color: '#ff4d4f', marginTop: 8 }}>
+            Error: {connectionError}
+          </div>
+        )}
+      </Modal>
     </AntLayout>
   );
 }

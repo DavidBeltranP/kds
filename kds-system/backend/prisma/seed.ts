@@ -94,11 +94,11 @@ async function main() {
 
   // Crear Pantalla 1 (Pollo)
   const screen1 = await prisma.screen.upsert({
-    where: { ip: '10.101.27.59' },
+    where: { name: 'Pantalla1' },
     update: {},
     create: {
       name: 'Pantalla1',
-      ip: '10.101.27.59',
+      
       queueId: queueLineas.id,
       status: 'OFFLINE',
       appearance: {
@@ -161,11 +161,11 @@ async function main() {
 
   // Crear Pantalla 2 (Pollo)
   const screen2 = await prisma.screen.upsert({
-    where: { ip: '10.101.27.58' },
+    where: { name: 'Pantalla2' },
     update: {},
     create: {
       name: 'Pantalla2',
-      ip: '10.101.27.58',
+      
       queueId: queueLineas.id,
       status: 'OFFLINE',
       appearance: {
@@ -228,11 +228,11 @@ async function main() {
 
   // Crear Pantalla 3 (Sánduches)
   const screen3 = await prisma.screen.upsert({
-    where: { ip: '10.101.27.60' },
+    where: { name: 'Pantalla3' },
     update: {},
     create: {
       name: 'Pantalla3',
-      ip: '10.101.27.60',
+      
       queueId: queueSanduche.id,
       status: 'OFFLINE',
       appearance: {

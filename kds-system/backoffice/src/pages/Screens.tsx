@@ -37,8 +37,8 @@ interface Queue {
 
 interface Screen {
   id: string;
+  number: number;
   name: string;
-  ip: string;
   queueId: string;
   queueName: string;
   status: 'ONLINE' | 'OFFLINE' | 'STANDBY';
@@ -93,7 +93,8 @@ export function Screens() {
     loadData();
 
     // Conectar WebSocket para recibir cambios de estado en tiempo real
-    const socket = io('http://localhost:3000', {
+    const socketUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3001';
+    const socket = io(socketUrl, {
       transports: ['websocket'],
     });
 
@@ -143,7 +144,6 @@ export function Screens() {
     setEditingScreen(screen);
     form.setFieldsValue({
       name: screen.name,
-      ip: screen.ip,
       queueId: screen.queueId,
     });
     setModalOpen(true);
@@ -328,7 +328,14 @@ export function Screens() {
         </Space>
       ),
     },
-    { title: 'IP', dataIndex: 'ip', key: 'ip' },
+    {
+      title: 'URL',
+      dataIndex: 'number',
+      key: 'number',
+      render: (number: number) => (
+        <Tag color="blue">/kds{number}</Tag>
+      ),
+    },
     { title: 'Cola', dataIndex: 'queueName', key: 'queueName' },
     {
       title: 'Estado',
@@ -452,19 +459,6 @@ export function Screens() {
             rules={[{ required: true, message: 'Ingrese el nombre' }]}
           >
             <Input placeholder="Pantalla 1" />
-          </Form.Item>
-          <Form.Item
-            name="ip"
-            label="Direccion IP"
-            rules={[
-              { required: true, message: 'Ingrese la IP' },
-              {
-                pattern: /^(\d{1,3}\.){3}\d{1,3}$/,
-                message: 'IP invalida',
-              },
-            ]}
-          >
-            <Input placeholder="192.168.1.100" />
           </Form.Item>
           <Form.Item
             name="queueId"
@@ -619,7 +613,7 @@ export function Screens() {
                 <Descriptions column={1} bordered>
                   <Descriptions.Item label="ID">{selectedScreen.id}</Descriptions.Item>
                   <Descriptions.Item label="Nombre">{selectedScreen.name}</Descriptions.Item>
-                  <Descriptions.Item label="IP">{selectedScreen.ip}</Descriptions.Item>
+                  <Descriptions.Item label="URL">/kds{selectedScreen.number}</Descriptions.Item>
                   <Descriptions.Item label="Cola">{selectedScreen.queueName}</Descriptions.Item>
                   <Descriptions.Item label="Estado">
                     {getStatusTag(selectedScreen.status)}

@@ -104,6 +104,9 @@ router.post(
   screenController.testPrinter
 );
 
+// Screen by number (public endpoint for KDS frontend)
+router.get('/screens/by-number/:number', screenController.getScreenByNumber);
+
 // Screen status
 router.post(
   '/screens/:id/standby',

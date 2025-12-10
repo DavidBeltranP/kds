@@ -85,7 +85,7 @@ export function StandbyScreen() {
         <p className="text-lg font-medium">{screenName}</p>
         {config && (
           <>
-            <p className="text-sm">IP: {config.ip}</p>
+            <p className="text-sm">Pantalla: KDS{config.number}</p>
             <p className="text-sm">Cola: {config.queue.name}</p>
           </>
         )}

@@ -442,53 +442,15 @@ export const receiveTicketsBatch = asyncHandler(
 
 /**
  * GET /api/config
- * Endpoint para obtener configuración de pantalla por IP (compatible con sistema anterior)
+ * Endpoint deprecado - Las pantallas ahora se identifican por número, no por IP
+ * Usar /api/screens/by-number/:number en su lugar
  */
 export const getScreenConfigByIp = asyncHandler(
-  async (req: Request, res: Response) => {
-    // Obtener IP del cliente
-    const clientIp = req.ip || req.socket.remoteAddress || '';
-    const ip = clientIp.replace('::ffff:', ''); // Normalizar IPv6 a IPv4
-
-    // Buscar pantalla por IP
-    const screen = await prisma.screen.findFirst({
-      where: { ip },
-      include: {
-        appearance: true,
-        preference: true,
-        queue: true,
-        printer: true,
-      },
+  async (_req: Request, res: Response) => {
+    res.status(410).json({
+      error: 'Endpoint deprecado',
+      message: 'Las pantallas ahora se identifican por número. Usar /api/screens/by-number/:number',
+      example: '/api/screens/by-number/1',
     });
-
-    if (!screen) {
-      res.json({});
-      return;
-    }
-
-    // Formatear respuesta compatible con sistema anterior
-    const config = {
-      appearance: {
-        columns: screen.appearance?.columnsPerScreen || 4,
-        fontSize: screen.appearance?.fontSize || 'medium',
-        theme: screen.appearance?.theme || 'dark',
-      },
-      preferences: {
-        soundEnabled: true,
-        alertTime: 300,
-        autoRefresh: 5000,
-      },
-      pantalla: {
-        nombre: screen.name,
-        ip: screen.ip,
-        cola: screen.queue?.name || '',
-        imprime: screen.printer?.enabled ? 'SI' : 'NO',
-        impresoraNombre: screen.printer?.name || '',
-        impresoraIP: screen.printer?.ip || '',
-        impresoraPuerto: screen.printer?.port || 9100,
-      },
-    };
-
-    res.json(config);
   }
 );
