@@ -6,7 +6,20 @@ export function getElapsedTime(createdAt: string | Date): {
   seconds: number;
   formatted: string;
 } {
-  const created = new Date(createdAt);
+  // Asegurar que createdAt sea válido
+  let created: Date;
+  try {
+    created = new Date(createdAt);
+    // Verificar que la fecha sea válida
+    if (isNaN(created.getTime())) {
+      console.warn('[timeUtils] Invalid date:', createdAt);
+      return { minutes: 0, seconds: 0, formatted: '00:00' };
+    }
+  } catch (e) {
+    console.warn('[timeUtils] Error parsing date:', createdAt, e);
+    return { minutes: 0, seconds: 0, formatted: '00:00' };
+  }
+
   const now = new Date();
   const diff = now.getTime() - created.getTime();
 
@@ -19,9 +32,10 @@ export function getElapsedTime(createdAt: string | Date): {
   const minutes = Math.floor(cappedSeconds / 60);
   const seconds = cappedSeconds % 60;
 
-  const formatted = `${minutes.toString().padStart(2, '0')}:${seconds
-    .toString()
-    .padStart(2, '0')}`;
+  // Forzar exactamente 2 dígitos para minutos (nunca más de 99)
+  const minutesStr = String(Math.min(99, minutes)).padStart(2, '0');
+  const secondsStr = String(seconds).padStart(2, '0');
+  const formatted = `${minutesStr}:${secondsStr}`;
 
   return { minutes, seconds, formatted };
 }

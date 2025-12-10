@@ -39,3 +39,13 @@ temp/
 
 # Screenshots and images (development)
 inicial/
+
+# Claude Code local settings (may contain tokens)
+.claude/
+.claude/settings.local.json
+
+# Sensitive files
+*.pem
+*.key
+credentials.json
+secrets.json

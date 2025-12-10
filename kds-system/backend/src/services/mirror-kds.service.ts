@@ -323,6 +323,19 @@ class MirrorKDSService {
       }
     }
 
+    // Asegurar que la fecha sea válida y en formato ISO
+    let createdAt: Date;
+    try {
+      createdAt = new Date(row.fechaIngreso);
+      if (isNaN(createdAt.getTime())) {
+        console.warn('[Mirror] Invalid fechaIngreso, using current time:', row.fechaIngreso);
+        createdAt = new Date();
+      }
+    } catch {
+      console.warn('[Mirror] Error parsing fechaIngreso:', row.fechaIngreso);
+      createdAt = new Date();
+    }
+
     return {
       id: row.IdOrden,
       externalId: comanda.orderId || row.IdOrden,
@@ -330,7 +343,7 @@ class MirrorKDSService {
       channel: comanda.channel?.name || 'Local',
       customerName: comanda.customer?.name || comanda.otrosDatos?.llamarPor,
       status: 'PENDING',
-      createdAt: row.fechaIngreso,
+      createdAt,
       queue: row.Cola,
       screen: row.Pantalla,
       items,
