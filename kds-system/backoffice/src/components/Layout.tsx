@@ -16,6 +16,7 @@ import {
   TeamOutlined,
   ApiOutlined,
   DisconnectOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import { useTestModeStore } from '../store/testModeStore';
@@ -135,6 +136,16 @@ export function Layout() {
             key: '/appearance',
             icon: <BgColorsOutlined />,
             label: 'Apariencia',
+          },
+        ]
+      : []),
+    // Solo ADMIN y OPERATOR pueden ver SLA
+    ...(isAdmin || isOperator
+      ? [
+          {
+            key: '/sla',
+            icon: <ClockCircleOutlined />,
+            label: 'SLA',
           },
         ]
       : []),

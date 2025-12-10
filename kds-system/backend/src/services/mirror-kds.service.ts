@@ -83,6 +83,8 @@ class MirrorKDSService {
   private pool: sql.ConnectionPool | null = null;
   private config: MirrorConfig | null = null;
   private isConnected = false;
+  // Cache de timestamps de primera vista - para timer "desde ahora"
+  private orderFirstSeen: Map<string, Date> = new Map();
 
   /**
    * Verificar si el mirror está configurado
@@ -180,10 +182,10 @@ class MirrorKDSService {
           c.IdOrden,
           c.datosComanda,
           c.fechaIngreso,
-          c.fechaCreacion,
           d.Cola,
           d.Pantalla,
-          d.IdEstadoDistribucion
+          d.IdEstadoDistribucion,
+          d.fechaModificacion
         FROM Comandas c
         INNER JOIN Distribucion d ON c.IdOrden = d.idOrden
         WHERE d.IdEstadoDistribucion = 'EN_PANTALLA'
@@ -200,15 +202,18 @@ class MirrorKDSService {
         request.input('screenFilter', screenFilter);
       }
 
-      const result = await request.query<{
-        IdOrden: string;
-        datosComanda: string;
-        fechaIngreso: Date;
-        fechaCreacion: string;
-        Cola: string;
-        Pantalla: string;
-        IdEstadoDistribucion: string;
-      }>(query);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const result = await request.query<any>(query);
+
+      // IDs de órdenes actuales en pantalla
+      const currentOrderIds = new Set(result.recordset.map((row: { IdOrden: string }) => row.IdOrden));
+
+      // Limpiar caché de órdenes que ya no están en pantalla
+      for (const orderId of this.orderFirstSeen.keys()) {
+        if (!currentOrderIds.has(orderId)) {
+          this.orderFirstSeen.delete(orderId);
+        }
+      }
 
       // Mapear a formato de nuestro frontend
       return result.recordset.map((row) => {
@@ -270,7 +275,8 @@ class MirrorKDSService {
    */
   private mapToMirrorOrder(
     comanda: KDS2Comanda,
-    row: { IdOrden: string; fechaIngreso: Date; Cola: string; Pantalla: string }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    row: any
   ): MirrorOrder {
     // Extraer items de productos
     const items: MirrorOrder['items'] = [];
@@ -323,17 +329,18 @@ class MirrorKDSService {
       }
     }
 
-    // Asegurar que la fecha sea válida y en formato ISO
+    // Timer "desde ahora": usar el momento en que vimos la orden por primera vez
+    // Esto evita el problema de fechas viejas en la BD
     let createdAt: Date;
-    try {
-      createdAt = new Date(row.fechaIngreso);
-      if (isNaN(createdAt.getTime())) {
-        console.warn('[Mirror] Invalid fechaIngreso, using current time:', row.fechaIngreso);
-        createdAt = new Date();
-      }
-    } catch {
-      console.warn('[Mirror] Error parsing fechaIngreso:', row.fechaIngreso);
+    const orderId = row.IdOrden;
+
+    if (this.orderFirstSeen.has(orderId)) {
+      // Ya vimos esta orden antes, usar el timestamp guardado
+      createdAt = this.orderFirstSeen.get(orderId)!;
+    } else {
+      // Primera vez que vemos esta orden, guardar timestamp actual
       createdAt = new Date();
+      this.orderFirstSeen.set(orderId, createdAt);
     }
 
     return {

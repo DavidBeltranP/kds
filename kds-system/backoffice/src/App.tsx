@@ -13,6 +13,7 @@ import { Appearance } from './pages/Appearance';
 import { Settings } from './pages/Settings';
 import { Users } from './pages/Users';
 import { TestScreen } from './pages/TestScreen';
+import { SLA } from './pages/SLA';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuthStore();
@@ -127,6 +128,14 @@ function App() {
               element={
                 <RoleRoute allowedRoles={['ADMIN', 'OPERATOR']}>
                   <Appearance />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="sla"
+              element={
+                <RoleRoute allowedRoles={['ADMIN', 'OPERATOR']}>
+                  <SLA />
                 </RoleRoute>
               }
             />
