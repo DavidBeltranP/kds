@@ -222,7 +222,7 @@ function ScreenSelector() {
               {screens.map((screen) => (
                 <a
                   key={screen.number}
-                  href={`/kds${screen.number}`}
+                  href={`/kds/${screen.number}`}
                   className={`
                     p-6 rounded-lg border-2 transition-all
                     ${screen.status === 'ONLINE'
@@ -248,14 +248,14 @@ function ScreenSelector() {
               Configure las pantallas en el backoffice o use una URL directa:
             </p>
             <code className="bg-gray-800 text-green-400 px-4 py-2 rounded block mt-4">
-              /kds1, /kds2, /kds3...
+              /kds/1, /kds/2, /kds/3...
             </code>
           </>
         )}
 
         <div className="mt-12 text-gray-600 text-sm">
           <p>URLs disponibles:</p>
-          <code className="text-gray-500">/kds1 /kds2 /kds3 ...</code>
+          <code className="text-gray-500">/kds/1 /kds/2 /kds/3 ...</code>
         </div>
       </div>
     </div>
@@ -270,8 +270,8 @@ function App() {
         {/* Ruta principal - selector de pantallas */}
         <Route path="/" element={<ScreenSelector />} />
 
-        {/* Rutas para cada pantalla: /kds1, /kds2, etc. */}
-        <Route path="/kds:number" element={<KDSLoader />} />
+        {/* Rutas para cada pantalla: /kds/1, /kds/2, etc. */}
+        <Route path="/kds/:number" element={<KDSLoader />} />
 
         {/* Fallback para rutas no encontradas */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -16,6 +16,7 @@ import {
   ColorPicker,
   Switch,
   Descriptions,
+  Tooltip,
 } from 'antd';
 import {
   PlusOutlined,
@@ -26,6 +27,7 @@ import {
   PoweroffOutlined,
   KeyOutlined,
   PrinterOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { screensApi, queuesApi } from '../services/api';
 import { io } from 'socket.io-client';
@@ -332,8 +334,9 @@ export function Screens() {
       title: 'URL',
       dataIndex: 'number',
       key: 'number',
+      width: 100,
       render: (number: number) => (
-        <Tag color="blue">/kds{number}</Tag>
+        <Tag color="blue">/kds/{number}</Tag>
       ),
     },
     { title: 'Cola', dataIndex: 'queueName', key: 'queueName' },
@@ -379,40 +382,46 @@ export function Screens() {
     {
       title: 'Acciones',
       key: 'actions',
+      width: 200,
       render: (_: any, record: Screen) => (
-        <Space>
-          <Button
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => handleEdit(record)}
-          />
-          <Button
-            icon={<DesktopOutlined />}
-            size="small"
-            onClick={() => handleConfigure(record)}
-          >
-            Configurar
-          </Button>
-          <Button
-            icon={<PrinterOutlined />}
-            size="small"
-            onClick={() => handleOpenPrinterModal(record)}
-          >
-            Impresora
-          </Button>
-          <Button
-            icon={<PoweroffOutlined />}
-            size="small"
-            onClick={() => handleToggleStandby(record)}
-            danger={record.status !== 'STANDBY'}
-          >
-            {record.status === 'STANDBY' ? 'Activar' : 'Standby'}
-          </Button>
+        <Space size="small">
+          <Tooltip title="Editar">
+            <Button
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Configurar">
+            <Button
+              icon={<SettingOutlined />}
+              size="small"
+              onClick={() => handleConfigure(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Impresora">
+            <Button
+              icon={<PrinterOutlined />}
+              size="small"
+              onClick={() => handleOpenPrinterModal(record)}
+            />
+          </Tooltip>
+          <Tooltip title={record.status === 'STANDBY' ? 'Activar' : 'Standby'}>
+            <Button
+              icon={<PoweroffOutlined />}
+              size="small"
+              onClick={() => handleToggleStandby(record)}
+              danger={record.status !== 'STANDBY'}
+              type={record.status === 'STANDBY' ? 'primary' : 'default'}
+            />
+          </Tooltip>
           <Popconfirm
             title="Eliminar pantalla?"
             onConfirm={() => handleDelete(record.id)}
           >
-            <Button icon={<DeleteOutlined />} size="small" danger />
+            <Tooltip title="Eliminar">
+              <Button icon={<DeleteOutlined />} size="small" danger />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -613,7 +622,7 @@ export function Screens() {
                 <Descriptions column={1} bordered>
                   <Descriptions.Item label="ID">{selectedScreen.id}</Descriptions.Item>
                   <Descriptions.Item label="Nombre">{selectedScreen.name}</Descriptions.Item>
-                  <Descriptions.Item label="URL">/kds{selectedScreen.number}</Descriptions.Item>
+                  <Descriptions.Item label="URL">/kds/{selectedScreen.number}</Descriptions.Item>
                   <Descriptions.Item label="Cola">{selectedScreen.queueName}</Descriptions.Item>
                   <Descriptions.Item label="Estado">
                     {getStatusTag(selectedScreen.status)}
