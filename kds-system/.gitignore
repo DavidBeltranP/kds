@@ -257,3 +257,10 @@ kds-original/
 # Configuraciones locales de Claude Code que pueden contener tokens
 .claude/
 .claude/settings.local.json
+
+# =============================================================================
+# POSTMAN COLLECTIONS (may contain credentials)
+# =============================================================================
+*.postman_collection.json
+*.postman_environment.json
+!*.postman_collection.example.json
