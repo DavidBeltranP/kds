@@ -15,6 +15,7 @@ export interface Order {
   externalId: string;
   screenId?: string;
   channel: string;
+  channelType?: string; // SALON, LLEVAR, etc.
   customerName?: string;
   identifier: string;
   status: 'PENDING' | 'IN_PROGRESS' | 'FINISHED' | 'CANCELLED';

@@ -62,6 +62,7 @@ export interface MirrorOrder {
   externalId: string;
   identifier: string;
   channel: string;
+  channelType?: string; // SALON, LLEVAR, etc.
   customerName?: string;
   status: 'PENDING' | 'FINISHED';
   createdAt: Date;
@@ -278,6 +279,7 @@ class MirrorKDSService {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     row: any
   ): MirrorOrder {
+
     // Extraer items de productos
     const items: MirrorOrder['items'] = [];
     let itemIndex = 0;
@@ -348,6 +350,7 @@ class MirrorKDSService {
       externalId: comanda.orderId || row.IdOrden,
       identifier,
       channel: comanda.channel?.name || 'Local',
+      channelType: comanda.channel?.type || undefined,
       customerName: comanda.customer?.name || comanda.otrosDatos?.llamarPor,
       status: 'PENDING',
       createdAt,

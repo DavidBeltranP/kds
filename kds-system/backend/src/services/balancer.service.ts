@@ -236,6 +236,7 @@ export class BalancerService {
         externalId: mo.externalId,
         screenId: screenId,
         channel: mo.channel,
+        channelType: mo.channelType,
         customerName: mo.customerName,
         identifier: mo.identifier,
         status: mo.status as Order['status'],

@@ -464,6 +464,21 @@ export function OrderCard({
                 }}
               >
                 {order.channel}
+                {order.channelType && (
+                  <span
+                    style={{
+                      marginLeft: '8px',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      backgroundColor: order.channelType === 'LLEVAR' ? '#e74c3c' : '#27ae60',
+                      color: '#fff',
+                      fontSize: '0.85em',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {order.channelType}
+                  </span>
+                )}
               </span>
             </div>
           </div>
