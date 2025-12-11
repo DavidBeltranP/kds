@@ -1,10 +1,91 @@
-Lee todos los archivos dentro de la carpeta prew para que tengas el contexto completo.
-Vamos a incorporar esta implementación en modo API para la gestión de los tickets, pero debe ser configurable. Es decir, desde la pantalla de configuración se debe poder elegir, mediante un selector dentro de un apartado llamado “Modo de configuración”, si deseamos continuar con la importación de tickets de la manera actual o utilizar el modo API.
+# KDS Project - Contexto de Trabajo
+Última actualización: 2025-12-11 12:35
 
-Adicionalmente, vamos a implementar el nuevo servicio de impresión (denominado Centralizado) junto con el método actual, que llamaremos Local. Para ello, también debes enfocarte en la implementación del nuevo formato de impresión y agregar en la pantalla de configuración un apartado llamado “Modo de impresión”, donde se pueda seleccionar si utilizamos el método Local o el método Centralizado.
-Es importante que lo que tenemos actualmente continúe funcionando, mientras incorporamos estas dos nuevas funcionalidades que se detallan en la carpeta prew.
+## Estado Actual del Proyecto
+Sistema KDS (Kitchen Display System) con:
+- Backend: Node.js + Express + Prisma + PostgreSQL
+- Frontend KDS: React + Vite (pantalla de cocina)
+- Frontend Backoffice: React + Vite (administración)
 
-La carpeta prew forma parte de una versión anterior de este mismo aplicativo, donde estas funcionalidades ya están implementadas. No queremos perder el avance existente en ese proyecto; al contrario, buscamos potenciarlo e integrarlo con el actual.
+## Servicios Activos (antes de pausa)
+- PostgreSQL: Docker (kds-postgres-dev) - Puerto 5432
+- Redis: Docker (kds-redis-dev) - Puerto 6379
+- Backend: npm run dev - Puerto 3001
+- KDS Frontend: npm run dev - Puerto 8080
+- Backoffice: npm run dev - Puerto 5174
+- Adminer (DB GUI): Puerto 8082
+- Redis Commander: Puerto 8083
 
-en el backoffice deshabilita ya la generacion de ordenes de prueba.
+## URLs de Acceso
+- KDS: http://localhost:8080/kds/1
+- Backoffice: http://localhost:5174
+- API: http://localhost:3001/api
+- Adminer: http://localhost:8082
 
+## Tarea Completada: MODO PRUEBA / SANDBOX
+
+### Funcionalidad implementada:
+1. **Panel de pruebas** (botón engranaje esquina inferior derecha)
+2. **Botonera física integrada** con modo prueba
+3. **Generación de PDF/ticket** idéntico al real (solo agrega [MODO PRUEBA] al final)
+4. **Acciones sandbox** que NO afectan la BD
+
+### Flujo de uso:
+1. Abrir KDS → http://localhost:8080/kds/1
+2. Clic en engranaje (esquina inferior derecha)
+3. Activar "Modo Prueba" (botón naranja)
+4. Agregar órdenes de prueba si es necesario
+5. Usar botonera física para calificar → genera PDF automáticamente
+6. Restaurar órdenes originales cuando termine
+
+### Archivos creados/modificados:
+- `kds-frontend/src/store/testModeStore.ts` (nuevo)
+- `kds-frontend/src/components/TestModePanel/TestModePanel.tsx` (nuevo)
+- `kds-frontend/src/components/TestModePanel/index.ts` (nuevo)
+- `kds-frontend/src/hooks/useKeyboard.ts` (modificado - integración modo prueba)
+- `kds-frontend/src/App.tsx` (modificado - importó TestModePanel)
+
+### Formato del ticket (idéntico al real):
+```
+        ORDEN {identifier}
+
+Canal: {channel}
+Cliente: {customerName}
+
+--------------------------------
+{qty}x {name}
+  + {modifier}
+  * {notes}
+--------------------------------
+Hora: HH:MM
+
+        [MODO PRUEBA]
+```
+
+## Comandos para reiniciar servicios
+```bash
+# Docker (desde kds-system/infra)
+docker compose -f docker-compose.dev.yml up -d
+
+# Backend (desde kds-system/backend)
+npm run dev
+
+# KDS Frontend (desde kds-system/kds-frontend)
+npm run dev
+
+# Backoffice (desde kds-system/backoffice)
+npm run dev
+```
+
+## Tareas Pendientes
+- (Ninguna - esperando nuevas instrucciones después del almuerzo)
+
+## Historial de Sesiones
+### Sesión 2025-12-11 (mañana)
+- Docker montado
+- IMPLEMENTADO: Modo Prueba completo
+  - Panel flotante con toggle
+  - Botonera física integrada
+  - PDF idéntico al real
+  - Logs de acciones
+- Usuario fue a almorzar ~12:35

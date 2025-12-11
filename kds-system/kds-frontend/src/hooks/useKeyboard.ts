@@ -3,7 +3,74 @@ import { ButtonController } from '../utils/buttonController';
 import { useConfigStore, useKeyboard } from '../store/configStore';
 import { useOrderStore, useCurrentPageOrders } from '../store/orderStore';
 import { useScreenStore } from '../store/screenStore';
+import { useTestModeStore } from '../store/testModeStore';
 import { socketService } from '../services/socket';
+import type { Order } from '../types';
+
+// Generar PDF de prueba para ticket (formato idéntico al real)
+function generateTestPDF(order: Order): Promise<string> {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('es-EC', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  // Formato idéntico al de printer.service.ts
+  const lines: string[] = [];
+
+  // Encabezado
+  lines.push('');
+  lines.push(`        ORDEN ${order.identifier}`);
+  lines.push('');
+
+  // Canal y cliente
+  lines.push(`Canal: ${order.channel}`);
+  if (order.customerName) {
+    lines.push(`Cliente: ${order.customerName}`);
+  }
+  lines.push('');
+
+  // Separador
+  lines.push('-'.repeat(32));
+
+  // Items (formato idéntico al real)
+  for (const item of order.items) {
+    const qty = item.quantity > 1 ? `${item.quantity}x ` : '';
+    lines.push(`${qty}${item.name}`);
+
+    if (item.modifier) {
+      lines.push(`  + ${item.modifier}`);
+    }
+    if (item.notes) {
+      lines.push(`  * ${item.notes}`);
+    }
+  }
+
+  // Separador
+  lines.push('-'.repeat(32));
+
+  // Hora
+  lines.push(`Hora: ${timeStr}`);
+  lines.push('');
+
+  // Indicador pequeño de prueba
+  lines.push('        [MODO PRUEBA]');
+  lines.push('');
+
+  const ticketContent = lines.join('\n');
+
+  const blob = new Blob([ticketContent], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ticket-${order.identifier}-${Date.now()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  return Promise.resolve(`ticket-${order.identifier}.txt`);
+}
 
 export function useKeyboardController() {
   const controllerRef = useRef<ButtonController | null>(null);
@@ -13,9 +80,16 @@ export function useKeyboardController() {
   const ordersPerPage = config?.appearance?.columnsPerScreen || 4;
   const currentOrders = useCurrentPageOrders(ordersPerPage);
 
-  const { setPage } = useOrderStore();
+  const { setPage, removeOrder } = useOrderStore();
   const { isStandby, toggleStandby, setComboProgress, showCombo } =
     useScreenStore();
+
+  // Modo prueba - acciones locales sin afectar BD
+  const isTestMode = useTestModeStore((state) => state.isTestMode);
+  const addLog = useTestModeStore((state) => state.addLog);
+  const saveOriginalOrders = useTestModeStore((state) => state.saveOriginalOrders);
+  const getOriginalOrders = useTestModeStore((state) => state.getOriginalOrders);
+  const orders = useOrderStore((state) => state.orders);
 
   const handleFinishOrder = useCallback(
     (index: number) => {
@@ -23,19 +97,50 @@ export function useKeyboardController() {
 
       const order = currentOrders[index];
       if (order) {
-        console.log(`[Keyboard] Finishing order at index ${index}:`, order.id);
-        socketService.finishOrder(order.id);
+        // MODO PRUEBA: Solo remover localmente, NO enviar al backend + generar PDF
+        if (isTestMode) {
+          // Guardar órdenes originales la primera vez
+          if (!getOriginalOrders()) {
+            saveOriginalOrders([...orders]);
+            addLog('Órdenes originales guardadas (botonera)');
+          }
+
+          console.log(`[Keyboard-TEST] Finishing order at index ${index}:`, order.id);
+
+          // Generar PDF de prueba automáticamente
+          generateTestPDF(order).then((filename) => {
+            addLog(`[BOTONERA] PDF generado: ${filename}`);
+          });
+
+          removeOrder(order.id);
+          addLog(`[BOTONERA] Orden #${order.identifier} finalizada (SIMULADO)`);
+        } else {
+          // MODO PRODUCCIÓN: Enviar al backend normalmente
+          console.log(`[Keyboard] Finishing order at index ${index}:`, order.id);
+          socketService.finishOrder(order.id);
+        }
       }
     },
-    [currentOrders, isStandby]
+    [currentOrders, isStandby, isTestMode, orders, removeOrder, addLog, saveOriginalOrders, getOriginalOrders]
   );
 
   const handleNavigation = useCallback(
     (direction: 'next' | 'prev' | 'first' | 'last') => {
       if (isStandby) return;
       setPage(direction);
+
+      // Log en modo prueba
+      if (isTestMode) {
+        const directionNames: Record<string, string> = {
+          next: 'siguiente',
+          prev: 'anterior',
+          first: 'primera',
+          last: 'última',
+        };
+        addLog(`[BOTONERA] Navegación: página ${directionNames[direction]}`);
+      }
     },
-    [isStandby, setPage]
+    [isStandby, setPage, isTestMode, addLog]
   );
 
   const handleTogglePower = useCallback(() => {
@@ -44,9 +149,16 @@ export function useKeyboardController() {
     toggleStandby();
     // Si estaba en standby, ahora está online. Si estaba online, ahora está en standby.
     const newStatus = wasStandby ? 'ONLINE' : 'STANDBY';
-    socketService.updateStatus(newStatus);
-    console.log('[Keyboard] Power toggled:', newStatus);
-  }, [toggleStandby]);
+
+    // MODO PRUEBA: Solo cambio visual, no notificar al backend
+    if (isTestMode) {
+      console.log('[Keyboard-TEST] Power toggled:', newStatus);
+      addLog(`[BOTONERA] Power toggle: ${newStatus} (SIMULADO)`);
+    } else {
+      socketService.updateStatus(newStatus);
+      console.log('[Keyboard] Power toggled:', newStatus);
+    }
+  }, [toggleStandby, isTestMode, addLog]);
 
   const handleComboProgress = useCallback(
     (progress: number) => {

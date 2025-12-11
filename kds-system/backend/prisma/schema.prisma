@@ -436,6 +436,14 @@ model GeneralConfig {
   id                     String  @id @default("general")
 
   // ============================================
+  // MODO DE PRUEBA (Sandbox)
+  // ============================================
+  // Cuando está activo:
+  // - Las órdenes se leen de MAXPOINT pero acciones NO afectan MAXPOINT
+  // - La impresión genera PDF en lugar de enviar a impresora física
+  testMode               Boolean @default(false)
+
+  // ============================================
   // MODO DE CONFIGURACIÓN (Origen de tickets)
   // ============================================
   // "POLLING" = Importación desde MAXPOINT (método actual)

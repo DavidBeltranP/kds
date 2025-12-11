@@ -4,10 +4,12 @@ import { Header } from './components/Header';
 import { OrderGrid } from './components/OrderGrid';
 import { Footer } from './components/Footer';
 import { StandbyScreen } from './components/StandbyScreen';
+import { TestModePanel } from './components/TestModePanel';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useKeyboardController } from './hooks/useKeyboard';
 import { useConfigStore, useAppearance } from './store/configStore';
 import { useIsStandby } from './store/screenStore';
+import { useIsTestMode } from './store/testModeStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -23,6 +25,7 @@ function KDSScreen({ screenId, apiKey }: { screenId: string; apiKey: string }) {
   const { isLoading, error } = useConfigStore();
   const isStandby = useIsStandby();
   const appearance = useAppearance();
+  const isTestMode = useIsTestMode();
 
   // Inicializar WebSocket
   useWebSocket(screenId, apiKey);
@@ -76,11 +79,14 @@ function KDSScreen({ screenId, apiKey }: { screenId: string; apiKey: string }) {
         backgroundColor,
         color: textColor,
         fontFamily: appearance?.fontFamily || 'Inter, sans-serif',
+        paddingTop: isTestMode ? '28px' : '0', // Espacio para banner de modo prueba
       }}
     >
       <Header />
       <OrderGrid />
       <Footer />
+      {/* Panel de Modo Prueba - Botonera flotante */}
+      <TestModePanel />
     </div>
   );
 }
